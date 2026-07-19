@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jaybird.parser;
 
+import org.firebirdsql.jaybird.util.ObjectReference;
 import org.firebirdsql.util.InternalApi;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-import java.util.Locale;
+import java.util.Optional;
 
 import static java.util.Objects.requireNonNull;
 
@@ -17,27 +17,24 @@ import static java.util.Objects.requireNonNull;
  * @since 5
  */
 @InternalApi
-@NullMarked
 public final class StatementIdentification {
 
     private static final StatementIdentification UNKNOWN_INSTANCE =
-            new StatementIdentification(LocalStatementType.UNKNOWN, null, null, false);
+            new StatementIdentification(LocalStatementType.UNKNOWN, null, false);
 
     private final LocalStatementType statementType;
-    private final @Nullable String schema;
-    private final @Nullable String tableName;
+    private final @Nullable ObjectReference targetObject;
     private final boolean returningClauseDetected;
 
-    StatementIdentification(LocalStatementType statementType, @Nullable Token schema, @Nullable Token tableName,
+    StatementIdentification(LocalStatementType statementType, @Nullable ObjectReference targetObject,
             boolean returningClauseDetected) {
         this.statementType = requireNonNull(statementType, "statementType");
-        this.schema = normalizeObjectName(schema);
-        this.tableName = normalizeObjectName(tableName);
+        this.targetObject = targetObject;
         this.returningClauseDetected = returningClauseDetected;
     }
 
     /**
-     * @return returns an instance with {@link LocalStatementType#UNKNOWN}, no schema+table, no returning clause
+     * @return returns an instance with {@link LocalStatementType#UNKNOWN}, no target object, no returning clause
      */
     public static StatementIdentification unknown() {
         return UNKNOWN_INSTANCE;
@@ -48,51 +45,20 @@ public final class StatementIdentification {
     }
 
     /**
-     * Schema, if this is a DML statement (other than {@code SELECT}), and if the table is qualified.
+     * Target object of the statement.
      * <p>
-     * It reports the name normalized to its metadata storage representation.
+     * For example, for DML statements other than {@code SELECT}, this is the (target) table. If a target object is
+     * available for a particular statement depends on the needs of Jaybird.
      * </p>
      *
-     * @return schema, {@code null} if the table was not qualified, or for {@code SELECT} and other non-DML statements
-     * @since 7
+     * @return target object if any, otherwise empty
      */
-    public @Nullable String getSchema() {
-        return schema;
-    }
-
-    /**
-     * Table name, if this is a DML statement (other than {@code SELECT}).
-     * <p>
-     * It reports the name normalized to its metadata storage representation.
-     * </p>
-     *
-     * @return table name, {@code null} for {@code SELECT} and other non-DML statements
-     */
-    public @Nullable String getTableName() {
-        return tableName;
+    public Optional<ObjectReference> getTargetObject() {
+        return Optional.ofNullable(targetObject);
     }
 
     public boolean returningClauseDetected() {
         return returningClauseDetected;
-    }
-
-    /**
-     * Normalizes an object name from the parser to its storage representation.
-     * <p>
-     * Unquoted identifiers are uppercased, and quoted identifiers are returned with the quotes stripped and doubled
-     * double quotes replaced by a single double quote.
-     * </p>
-     *
-     * @param objectToken
-     *         token with the object name (can be {@code null})
-     * @return normalized object name, or {@code null} if {@code objectToken} was {@code null}
-     */
-    private static @Nullable String normalizeObjectName(@Nullable Token objectToken) {
-        if (objectToken == null) return null;
-        if (objectToken instanceof QuotedIdentifierToken quotedIdentifier) {
-            return quotedIdentifier.name();
-        }
-        return objectToken.text().toUpperCase(Locale.ROOT);
     }
 
 }

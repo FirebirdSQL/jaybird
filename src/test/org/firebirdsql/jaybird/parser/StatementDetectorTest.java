@@ -2,11 +2,13 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jaybird.parser;
 
+import org.firebirdsql.jaybird.util.ObjectReference;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -28,16 +30,14 @@ class StatementDetectorTest {
     @ParameterizedTest
     @MethodSource("detectionCases")
     void testDetection(boolean detectReturning, String statement, LocalStatementType expectedType,
-            Token expectedSchemaToken, Token expectedTableNameToken, boolean expectedReturningDetected,
-            boolean expectedParserCompleted) {
+            ObjectReference expectedTargetObject, boolean expectedReturningDetected, boolean expectedParserCompleted) {
         detector = new StatementDetector(detectReturning);
         SqlParser parser = parserFor(statement);
 
         parser.parse();
 
         assertThat(detector.getStatementType()).describedAs("statementType").isEqualTo(expectedType);
-        assertThat(detector.getSchemaToken()).describedAs("schemaToken").isEqualTo(expectedSchemaToken);
-        assertThat(detector.getTableNameToken()).describedAs("tableNameToken").isEqualTo(expectedTableNameToken);
+        assertThat(detector.getTargetObject()).describedAs("targetObject").isEqualTo(Optional.ofNullable(expectedTargetObject));
         assertThat(detector.returningClauseDetected())
                 .describedAs("returningClauseDetected").isEqualTo(expectedReturningDetected);
         assertThat(parser.isCompleted())
@@ -56,9 +56,9 @@ class StatementDetectorTest {
                         LocalStatementType.SELECT, false),
                 // Presence of with as first keyword is sufficient
                 detectReturning("with", LocalStatementType.SELECT, true),
-                detectReturning("(select * from RDB$DATABASE)", LocalStatementType.SELECT, false),
 
                 // SELECT: Parenthesized query expressions
+                detectReturning("(select * from RDB$DATABASE)", LocalStatementType.SELECT, false),
                 noDetect("(select * from RDB$DATABASE)", LocalStatementType.SELECT, false),
                 noDetect("((select * from RDB$DATABASE))", LocalStatementType.SELECT, false),
                 // Presence of only the open parenthesis is sufficient
@@ -74,110 +74,103 @@ class StatementDetectorTest {
                 // DML
                 // insert
                 detectReturning("insert into sometable (id, column1, column2) values (?, ?, ?)",
-                        LocalStatementType.INSERT, new GenericToken(12, "sometable"), false, true),
+                        LocalStatementType.INSERT, ObjectReference.of("SOMETABLE"), false, true),
                 noDetect("insert into sometable (id, column1, column2) values (?, ?, ?)",
-                        LocalStatementType.INSERT, new GenericToken(12, "sometable"), false),
+                        LocalStatementType.INSERT, ObjectReference.of("SOMETABLE"), false),
                 detectReturning("insert into sometable (column1, column2) values (?, ?) returning id",
-                        LocalStatementType.INSERT, new GenericToken(12, "sometable"), true, true),
+                        LocalStatementType.INSERT, ObjectReference.of("SOMETABLE"), true, true),
                 noDetect("insert into sometable (column1, column2) values (?, ?) returning id",
-                        LocalStatementType.INSERT, new GenericToken(12, "sometable"), false),
+                        LocalStatementType.INSERT, ObjectReference.of("SOMETABLE"), false),
                 detectReturning("insert into sometable (column1, column2) default values returning id",
-                        LocalStatementType.INSERT, new GenericToken(12, "sometable"), true, true),
+                        LocalStatementType.INSERT, ObjectReference.of("SOMETABLE"), true, true),
                 detectReturning("insert into sometable (column1, column2) select a, b from othertable",
-                        LocalStatementType.INSERT, new GenericToken(12, "sometable"), false, true),
+                        LocalStatementType.INSERT, ObjectReference.of("SOMETABLE"), false, true),
                 detectReturning("insert into sometable (column1, column2) select a, b from othertable returning id",
-                        LocalStatementType.INSERT, new GenericToken(12, "sometable"), true, true),
+                        LocalStatementType.INSERT, ObjectReference.of("SOMETABLE"), true, true),
                 detectReturning("INSERT INTO TABLE_WITH_TRIGGER(TEXT) VALUES ('Some text to insert') RETURNING *",
-                        LocalStatementType.INSERT, new GenericToken(12, "TABLE_WITH_TRIGGER"), true, true),
+                        LocalStatementType.INSERT, ObjectReference.of("TABLE_WITH_TRIGGER"), true, true),
                 detectReturning("insert into other_schema.sometable (id, column1, column2) values (?, ?, ?)",
-                        LocalStatementType.INSERT, new GenericToken(12, "other_schema"),
-                        new GenericToken(25, "sometable"), false, true),
+                        LocalStatementType.INSERT, ObjectReference.of("OTHER_SCHEMA", "SOMETABLE"), false, true),
                 detectReturning("insert into other_schema.\"sometable\" values (1, 2) returning id1, id2",
-                        LocalStatementType.INSERT, new GenericToken(12, "other_schema"),
-                        new QuotedIdentifierToken(25, "\"sometable\""), true, true),
+                        LocalStatementType.INSERT, ObjectReference.of("OTHER_SCHEMA", "sometable"), true, true),
                 noDetect("insert into other_schema.\"sometable\" values (1, 2) returning id1, id2",
-                        LocalStatementType.INSERT, new GenericToken(12, "other_schema"),
-                        new QuotedIdentifierToken(25, "\"sometable\""), false),
+                        LocalStatementType.INSERT, ObjectReference.of("OTHER_SCHEMA", "sometable"), false),
 
                 // delete
                 detectReturning("delete from sometable",
-                        LocalStatementType.DELETE, new GenericToken(12, "sometable"), false, true),
-                noDetect("delete from sometable", LocalStatementType.DELETE, new GenericToken(12, "sometable"), true),
+                        LocalStatementType.DELETE, ObjectReference.of("SOMETABLE"), false, true),
+                noDetect("delete from sometable", LocalStatementType.DELETE, ObjectReference.of("SOMETABLE"), true),
                 detectReturning("delete from sometable returning column1",
-                        LocalStatementType.DELETE, new GenericToken(12, "sometable"), true, true),
+                        LocalStatementType.DELETE, ObjectReference.of("SOMETABLE"), true, true),
                 noDetect("delete from sometable returning column1",
-                        LocalStatementType.DELETE, new GenericToken(12, "sometable"), false),
+                        LocalStatementType.DELETE, ObjectReference.of("SOMETABLE"), false),
                 detectReturning("delete from sometable as somealias where somealias.foo = 'bar'",
-                        LocalStatementType.DELETE, new GenericToken(12, "sometable"), false, true),
+                        LocalStatementType.DELETE, ObjectReference.of("SOMETABLE"), false, true),
                 detectReturning("delete from \"OTHER_SCHEMA\".\"sometable\"",
-                        LocalStatementType.DELETE, new QuotedIdentifierToken(12, "\"OTHER_SCHEMA\""),
-                        new QuotedIdentifierToken(27, "\"sometable\""), false, true),
+                        LocalStatementType.DELETE, ObjectReference.of("OTHER_SCHEMA", "sometable"), false, true),
                 detectReturning("delete from \"OTHER_SCHEMA\".\"sometable\" returning column1",
-                        LocalStatementType.DELETE, new QuotedIdentifierToken(12, "\"OTHER_SCHEMA\""),
-                        new QuotedIdentifierToken(27, "\"sometable\""), true, true),
+                        LocalStatementType.DELETE, ObjectReference.of("OTHER_SCHEMA", "sometable"), true, true),
                 detectReturning("delete from \"OTHER_SCHEMA\".\"sometable\" as \"x\" returning column1",
-                        LocalStatementType.DELETE, new QuotedIdentifierToken(12, "\"OTHER_SCHEMA\""),
-                        new QuotedIdentifierToken(27, "\"sometable\""), true, true),
+                        LocalStatementType.DELETE, ObjectReference.of("OTHER_SCHEMA", "sometable"), true, true),
 
                 // update
                 detectReturning("update \"sometable\" set column1 = 1, column2 = column2 + 1 where x = y",
-                        LocalStatementType.UPDATE, new QuotedIdentifierToken(7, "\"sometable\""), false, true),
+                        LocalStatementType.UPDATE, ObjectReference.of("sometable"), false, true),
                 noDetect("update \"sometable\" set column1 = 1, column2 = column2 + 1 where x = y",
-                        LocalStatementType.UPDATE, new QuotedIdentifierToken(7, "\"sometable\""), false),
+                        LocalStatementType.UPDATE, ObjectReference.of("sometable"), false),
                 detectReturning("update sometable set column1 = 1, column2 = column2 + 1 where x = y returning column2, x",
-                        LocalStatementType.UPDATE, new GenericToken(7, "sometable"), true, true),
+                        LocalStatementType.UPDATE, ObjectReference.of("SOMETABLE"), true, true),
                 noDetect("update sometable set column1 = 1, column2 = column2 + 1 where x = y returning column2, x",
-                        LocalStatementType.UPDATE, new GenericToken(7, "sometable"), false),
+                        LocalStatementType.UPDATE, ObjectReference.of("SOMETABLE"), false),
                 detectReturning("update sometable withalias set column1 = 1 returning -1 as foo",
-                        LocalStatementType.UPDATE, new GenericToken(7, "sometable"), true, true),
+                        LocalStatementType.UPDATE, ObjectReference.of("SOMETABLE"), true, true),
                 detectReturning("update sometable \"withalias\" set column1 = 1 returning (id + 1) as foo",
-                        LocalStatementType.UPDATE, new GenericToken(7, "sometable"), true, true),
+                        LocalStatementType.UPDATE, ObjectReference.of("SOMETABLE"), true, true),
                 detectReturning("update PUBLIC.sometable set column1 = 2 returning calculated_column",
-                        LocalStatementType.UPDATE, new GenericToken(7, "PUBLIC"), new GenericToken(14, "sometable"),
-                        true, true),
+                        LocalStatementType.UPDATE, ObjectReference.of("PUBLIC", "SOMETABLE"), true, true),
 
                 // update or insert
                 detectReturning("update or insert into sometable (id, column1, column2) values (?, ?, (? * 2)) matching (id)",
-                        LocalStatementType.UPDATE_OR_INSERT, new GenericToken(22, "sometable"), false, true),
+                        LocalStatementType.UPDATE_OR_INSERT, ObjectReference.of("SOMETABLE"), false, true),
                 noDetect("update or insert into sometable (id, column1, column2) values (?, ?, (? * 2)) matching (id)",
-                        LocalStatementType.UPDATE_OR_INSERT, new GenericToken(22, "sometable"), false),
+                        LocalStatementType.UPDATE_OR_INSERT, ObjectReference.of("SOMETABLE"), false),
 
                 // merge
                 detectReturning("""
                         merge into sometable as somealias using othertable on somealias.x = othertable.y
                           when matched then update set somealias.y = othertable.x
                           when not matched then insert (x,y) values (othertable.x, othertable.y)""",
-                        LocalStatementType.MERGE, new GenericToken(11, "sometable"), false, true),
+                        LocalStatementType.MERGE, ObjectReference.of("SOMETABLE"), false, true),
                 noDetect("""
                         merge into sometable as somealias using othertable on somealias.x = othertable.y
                           when matched then update set somealias.y = othertable.x
                           when not matched then insert (x,y) values (othertable.x, othertable.y)""",
-                        LocalStatementType.MERGE, new GenericToken(11, "sometable"), false),
+                        LocalStatementType.MERGE, ObjectReference.of("SOMETABLE"), false),
 
                 // hairy examples with returning token elsewhere
                 detectReturning("insert into returning (returning) values (true)",
-                        LocalStatementType.INSERT, new GenericToken(12, "returning"), false, true),
+                        LocalStatementType.INSERT, ObjectReference.of("RETURNING"), false, true),
                 detectReturning("insert into returning (returning) values (true) returning id",
-                        LocalStatementType.INSERT, new GenericToken(12, "returning"), true, true),
+                        LocalStatementType.INSERT, ObjectReference.of("RETURNING"), true, true),
                 detectReturning("insert into returning (column1, column2) select a, returning from othertable",
-                        LocalStatementType.INSERT, new GenericToken(12, "returning"), false, true),
+                        LocalStatementType.INSERT, ObjectReference.of("RETURNING"), false, true),
                 detectReturning("insert into nothing (column1, column2) select a, returning /* comment */ from othertable",
-                        LocalStatementType.INSERT, new GenericToken(12, "nothing"), false, true),
+                        LocalStatementType.INSERT, ObjectReference.of("NOTHING"), false, true),
                 detectReturning("insert into returning (column1, column2) select a, returning, c from othertable",
-                        LocalStatementType.INSERT, new GenericToken(12, "returning"), false, true),
+                        LocalStatementType.INSERT, ObjectReference.of("RETURNING"), false, true),
                 detectReturning("update sometable as \"somealias\" set column1 = column1 + returning",
-                        LocalStatementType.UPDATE, new GenericToken(7, "sometable"), false, true),
+                        LocalStatementType.UPDATE, ObjectReference.of("SOMETABLE"), false, true),
                 detectReturning("update returning returning set returning = not returning where returning",
-                        LocalStatementType.UPDATE, new GenericToken(7, "returning"), false, true),
+                        LocalStatementType.UPDATE, ObjectReference.of("RETURNING"), false, true),
                 detectReturning("update returning returning set returning = not returning where returning and x = 1",
-                        LocalStatementType.UPDATE, new GenericToken(7, "returning"), false, true),
+                        LocalStatementType.UPDATE, ObjectReference.of("RETURNING"), false, true),
                 detectReturning("update returning returning set returning = not returning where x = 1 or returning is true",
-                        LocalStatementType.UPDATE, new GenericToken(7, "returning"), false, true),
+                        LocalStatementType.UPDATE, ObjectReference.of("RETURNING"), false, true),
                 detectReturning("update likematch set column1 = 'x' where returning like 'a_c%'",
-                        LocalStatementType.UPDATE, new GenericToken(7, "likematch"), false, true),
+                        LocalStatementType.UPDATE, ObjectReference.of("LIKEMATCH"), false, true),
                 // probably one of the worst cases (but actually easy for detection)
                 detectReturning("update returning returning set returning = not returning where returning returning returning returning",
-                        LocalStatementType.UPDATE, new GenericToken(7, "returning"), true, true),
+                        LocalStatementType.UPDATE, ObjectReference.of("RETURNING"), true, true),
 
                 // Transaction statements
 
@@ -235,11 +228,11 @@ class StatementDetectorTest {
                 detectReturning("""
                         using (val integer = ?)
                         do insert into generic_table (col_a, col_b) values (:val, :val);""",
-                        LocalStatementType.INSERT, new GenericToken(39, "generic_table"), false, true),
+                        LocalStatementType.INSERT, ObjectReference.of("GENERIC_TABLE"), false, true),
                 detectReturning("""
                         using (val integer = ?)
                         do insert into generic_table (col_a, col_b) values (:val, :val) returning id""",
-                        LocalStatementType.INSERT, new GenericToken(39, "generic_table"), true, true),
+                        LocalStatementType.INSERT, ObjectReference.of("GENERIC_TABLE"), true, true),
                 // Annoyingly, DO is not a reserved word
                 noDetect("""
                         using (DO integer = ?)
@@ -257,12 +250,12 @@ class StatementDetectorTest {
                             return DO * 2;
                           end
                         do update "sometable" set column1 = sub_func(1), column2 = column2 + 1 where x = do""",
-                        LocalStatementType.UPDATE, new QuotedIdentifierToken(349, "\"sometable\""), false),
+                        LocalStatementType.UPDATE, ObjectReference.of("sometable"), false),
                 detectReturning("""
                         using
                           declare DO integer = 1;
                         do delete from "sometable" where x = do returning id""",
-                        LocalStatementType.DELETE, new QuotedIdentifierToken(47, "\"sometable\""), true, true),
+                        LocalStatementType.DELETE, ObjectReference.of("sometable"), true, true),
 
                 // invalid syntax
                 detectReturning("update or invalid", LocalStatementType.OTHER, true),
@@ -301,39 +294,25 @@ class StatementDetectorTest {
     }
 
     private static Arguments detectReturning(String statement, LocalStatementType expectedType,
-            Token expectedTableNameToken, boolean expectedReturningDetected, boolean expectedParserCompleted) {
-        return detectReturning(statement, expectedType, null, expectedTableNameToken, expectedReturningDetected,
+            ObjectReference expectedTargetObject, boolean expectedReturningDetected, boolean expectedParserCompleted) {
+        return testCase(true, statement, expectedType, expectedTargetObject, expectedReturningDetected,
                 expectedParserCompleted);
-    }
-
-    private static Arguments detectReturning(String statement, LocalStatementType expectedType,
-            Token expectedSchemaToken, Token expectedTableNameToken, boolean expectedReturningDetected,
-            boolean expectedParserCompleted) {
-        return testCase(true, statement, expectedType, expectedSchemaToken, expectedTableNameToken,
-                expectedReturningDetected, expectedParserCompleted);
     }
 
     private static Arguments noDetect(String statement, LocalStatementType expectedType,
             boolean expectedParserCompleted) {
-        return noDetect(statement, expectedType, null, null, expectedParserCompleted);
+        return noDetect(statement, expectedType, null, expectedParserCompleted);
     }
 
-    private static Arguments noDetect(String statement, LocalStatementType expectedType, Token expectedTableNameToken,
-            boolean expectedParserCompleted) {
-        return noDetect(statement, expectedType, null, expectedTableNameToken, expectedParserCompleted);
-    }
-
-    private static Arguments noDetect(String statement, LocalStatementType expectedType, Token expectedSchemaToken,
-            Token expectedTableNameToken, boolean expectedParserCompleted) {
-        return testCase(false, statement, expectedType, expectedSchemaToken, expectedTableNameToken, false,
-                expectedParserCompleted);
+    private static Arguments noDetect(String statement, LocalStatementType expectedType,
+            ObjectReference expectedTargetObject, boolean expectedParserCompleted) {
+        return testCase(false, statement, expectedType, expectedTargetObject, false, expectedParserCompleted);
     }
 
     private static Arguments testCase(boolean detectReturning, String statement, LocalStatementType expectedType,
-            Token expectedSchemaToken, Token expectedTableNameToken, boolean expectedReturningDetected,
-            boolean expectedParserCompleted) {
-        return arguments(detectReturning, statement, expectedType, expectedSchemaToken, expectedTableNameToken,
-                expectedReturningDetected, expectedParserCompleted);
+            ObjectReference expectedTargetObject, boolean expectedReturningDetected, boolean expectedParserCompleted) {
+        return arguments(detectReturning, statement, expectedType, expectedTargetObject, expectedReturningDetected,
+                expectedParserCompleted);
     }
 
     private SqlParser parserFor(String statementText) {

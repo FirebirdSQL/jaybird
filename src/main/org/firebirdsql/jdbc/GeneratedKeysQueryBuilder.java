@@ -275,7 +275,7 @@ final class GeneratedKeysQueryBuilder {
 
     private List<String> getAllColumnNames(FirebirdDatabaseMetaData databaseMetaData) throws SQLException {
         // We're not using schema, as this is only called for Firebird 3.0 and older (no RETURNING * support)
-        String tableName = statementIdentification.getTableName();
+        String tableName = statementIdentification.getTargetObject().orElseThrow().last().name();
         try (ResultSet rs = databaseMetaData.getColumns(null, null, escapeWildcards(tableName), null)) {
             if (rs.next()) {
                 List<String> columns = new ArrayList<>();
@@ -292,14 +292,17 @@ final class GeneratedKeysQueryBuilder {
 
     private List<String> getColumnNames(int[] columnIndexes, FirebirdDatabaseMetaData databaseMetaData)
             throws SQLException {
-        String tableName = requireNonNull(statementIdentification.getTableName());
-        String schema = statementIdentification.getSchema();
+        ObjectReference tableReference = statementIdentification.getTargetObject().orElseThrow(() -> FbExceptionBuilder
+                .forNonTransientException(JaybirdErrorCodes.jb_generatedKeysNoColumnsFound)
+                .messageParameter("(unknown)", "no table reference found in statement")
+                .toSQLException());
+        String tableName = tableReference.last().name();
+        String schema = tableReference.size() == 2 ? tableReference.first().name() : null;
         if (schema == null) {
-            schema = databaseMetaData.findTableSchema(tableName)
-                    .orElseThrow(() -> FbExceptionBuilder
-                            .forNonTransientException(JaybirdErrorCodes.jb_generatedKeysNoColumnsFound)
-                            .messageParameter(ObjectReference.of(tableName), "schemaless table not on the search path")
-                            .toSQLException());
+            schema = databaseMetaData.findTableSchema(tableName).orElseThrow(() -> FbExceptionBuilder
+                    .forNonTransientException(JaybirdErrorCodes.jb_generatedKeysNoColumnsFound)
+                    .messageParameter(ObjectReference.of(tableName), "schemaless table not on the search path")
+                    .toSQLException());
         }
 
         Map<Integer, String> columnByIndex = mapColumnNamesByIndex(schema, tableName, columnIndexes, databaseMetaData);

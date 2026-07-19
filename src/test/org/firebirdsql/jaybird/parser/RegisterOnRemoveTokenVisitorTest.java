@@ -129,13 +129,14 @@ class RegisterOnRemoveTokenVisitorTest {
     }
 
     @Test
-    void complete_forwardedToDecoratedVisitor() {
+    void complete_forwardedToDecoratedVisitor_andOtherVisitors() {
         var visitor = new RegisterOnRemoveTokenVisitor<>(decoratedVisitor, List.of(newVisitor));
 
         visitor.complete(visitorRegistrar);
 
         //noinspection DataFlowIssue
         verify(decoratedVisitor).complete(not(same(visitorRegistrar)));
+        verify(newVisitor).complete(same(visitorRegistrar));
         verifyNoMoreInteractions(visitorRegistrar, decoratedVisitor, newVisitor);
     }
 

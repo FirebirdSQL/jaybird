@@ -7,6 +7,7 @@ import org.firebirdsql.jaybird.util.ObjectReference;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 
@@ -114,6 +115,11 @@ public final class ObjectReferenceExtractor implements TokenVisitor {
             unexpectedTokenException = new UnexpectedTokenException(
                     "Last token was scope specifier (%), missing scope or other token", previousToken);
         }
+    }
+
+    @Override
+    public TokenVisitor onRemoveRegister(Collection<TokenVisitor> visitors) {
+        return new RegisterOnRemoveTokenVisitor<>(this, visitors, true);
     }
 
     /**
