@@ -66,10 +66,13 @@ class StatementDetectorTest {
 
                 // EXECUTE PROCEDURE
                 detectReturning("execute procedure test 'value1', 'value2'",
-                        LocalStatementType.EXECUTE_PROCEDURE, false),
-                noDetect("execute procedure test 'value1', 'value2'", LocalStatementType.EXECUTE_PROCEDURE, false),
-                // Presence of execute procedure as first two keywords is sufficient
-                detectReturning("execute procedure", LocalStatementType.EXECUTE_PROCEDURE, true),
+                        LocalStatementType.EXECUTE_PROCEDURE, ObjectReference.of("TEST"), false, false),
+                noDetect("execute procedure test('value1', 'value2')",
+                        LocalStatementType.EXECUTE_PROCEDURE, ObjectReference.of("TEST"), false),
+                detectReturning("execute procedure test",
+                        LocalStatementType.EXECUTE_PROCEDURE, ObjectReference.of("TEST"), false, true),
+                noDetect("execute procedure \"some_schema\".\"test\"",
+                        LocalStatementType.EXECUTE_PROCEDURE, ObjectReference.of("some_schema", "test"), true),
 
                 // DML
                 // insert
@@ -256,6 +259,33 @@ class StatementDetectorTest {
                           declare DO integer = 1;
                         do delete from "sometable" where x = do returning id""",
                         LocalStatementType.DELETE, ObjectReference.of("sometable"), true, true),
+
+                // JDBC call escape
+                // TODO Will need further refinement (e.g. whole statement will need to be consumed, at least until closing brace)
+                noDetect("{call someproc}", LocalStatementType.JDBC_CALL_ESCAPE, ObjectReference.of("SOMEPROC"), true),
+                noDetect("{call someproc", LocalStatementType.OTHER, true),
+                noDetect("{call someproc(param1, param2)}",
+                        LocalStatementType.JDBC_CALL_ESCAPE, ObjectReference.of("SOMEPROC"), false),
+                noDetect("{?=call someproc}",
+                        LocalStatementType.JDBC_CALL_RETURN_ESCAPE, ObjectReference.of("SOMEPROC"), true),
+                noDetect("{? = call someproc}",
+                        LocalStatementType.JDBC_CALL_RETURN_ESCAPE, ObjectReference.of("SOMEPROC"), true),
+                noDetect("{? = call someproc(?)}",
+                        LocalStatementType.JDBC_CALL_RETURN_ESCAPE, ObjectReference.of("SOMEPROC"), false),
+                // TODO Should result in OTHER after refinement due to missing closing brace
+                // NOTE: Missing closing brace
+                noDetect("{call someproc(param1, param2)",
+                        LocalStatementType.JDBC_CALL_ESCAPE, ObjectReference.of("SOMEPROC"), false),
+
+                // Firebird 6+ CALL
+                noDetect("call insert_customer('LECLERC', 'CHARLES', null, ?)",
+                        LocalStatementType.CALL, ObjectReference.of("INSERT_CUSTOMER"), false),
+                noDetect("""
+                        call insert_customer(
+                            last_name => 'LECLERC',
+                            first_name => 'CHARLES',
+                            last_name => ?,
+                            id => ?)""", LocalStatementType.CALL, ObjectReference.of("INSERT_CUSTOMER"), false),
 
                 // invalid syntax
                 detectReturning("update or invalid", LocalStatementType.OTHER, true),
