@@ -14,14 +14,19 @@ import static java.util.Collections.unmodifiableMap;
 import static org.firebirdsql.jaybird.parser.CharSequenceComparison.caseInsensitiveComparator;
 
 /**
- * Detects the type of statement, and - optionally - whether a DML statement has a {@code RETURNING} clause.
+ * Detects the type of statement, and statement specific information like target object and {@code RETURNING} clause.
  * <p>
  * If the detected statement type is {@code UPDATE}, {@code DELETE}, {@code INSERT}, {@code UPDATE OR INSERT} and
  * {@code MERGE}, it identifies the affected table and - optionally - if a {@code RETURNING} clause is present
  * (delegated to a {@link ReturningClauseDetector}).
  * </p>
  * <p>
- * The types of statements detected are informed by the needs of Jaybird, and may change between point releases.
+ * If the detected statement is {@code EXECUTE PROCEDURE}, {@code CALL}, or - Callable Statement V2 only - a JDBC call
+ * escape, it identifies the stored procedure.
+ * </p>
+ * <p>
+ * The types of statements detected and other information are informed by the needs of Jaybird, and may change between
+ * point releases.
  * </p>
  *
  * @author Mark Rotteveel
@@ -56,6 +61,11 @@ public final class StatementDetector implements TokenVisitor {
         nextAfterStart.put("(", new StateAfterStart(ParserState.SELECT, LocalStatementType.SELECT));
         // Firebird 6.0+ USING ... DO; need to find end of the USING clause to detect actual statement type
         nextAfterStart.put("USING", new StateAfterStart(ParserState.FIND_USING_END, LocalStatementType.OTHER));
+        // Firebird 6.0+ CALL
+        nextAfterStart.put("CALL", new StateAfterStart(ParserState.CALL, LocalStatementType.CALL));
+        // JDBC escape (search for call escape)
+        // NOTE: JDBC call escape detection only applies to CallableStatement V2 handling
+        nextAfterStart.put("{", new StateAfterStart(ParserState.JDBC_ESCAPE_START, LocalStatementType.OTHER));
         NEXT_AFTER_START = unmodifiableMap(nextAfterStart);
     }
 
@@ -115,16 +125,19 @@ public final class StatementDetector implements TokenVisitor {
             visitorRegistrar.removeVisitor(this);
         } else {
             switch (parserState) {
+            case EXECUTE_PROCEDURE:
+            case CALL:
+            case JDBC_ESCAPE_CALL:
             case INSERT_INTO:
             case DML_TARGET:
             case DML_TARGET_FORWARD_TOKEN: {
                 targetObjectExtractor = new ObjectReferenceExtractor();
-                TokenVisitor registeredVisitor = targetObjectExtractor.onRemoveRegister(this);
-                visitorRegistrar.addVisitor(registeredVisitor);
+                TokenVisitor newVisitor = targetObjectExtractor.onRemoveRegister(this);
+                visitorRegistrar.addVisitor(newVisitor);
                 visitorRegistrar.removeVisitor(this);
                 if (parserState == ParserState.DML_TARGET_FORWARD_TOKEN) {
                     parserState = ParserState.DML_TARGET;
-                    registeredVisitor.visitToken(token, visitorRegistrar);
+                    newVisitor.visitToken(token, visitorRegistrar);
                 }
                 break;
             }
@@ -152,10 +165,11 @@ public final class StatementDetector implements TokenVisitor {
     @Override
     public void complete(VisitorRegistrar visitorRegistrar) {
         switch (parserState) {
-        case INSERT_INTO -> updateStatementType(LocalStatementType.OTHER);
-        case DML_TARGET -> {
+        // if parsing completes in these states, the statement is incomplete
+        case JDBC_ESCAPE_CALL, INSERT_INTO -> updateStatementType(LocalStatementType.OTHER);
+        // Handle DELETE FROM ... without WHERE, and EXECUTE PROCEDURE ... without arguments
+        case EXECUTE_PROCEDURE, DML_TARGET -> {
             // TODO Maybe remove complete(..) and instead have the parser post an EOF token?
-            // Handle DELETE FROM ... without WHERE
             if (targetObject == null && !trySetTargetObject()) {
                 updateStatementType(LocalStatementType.OTHER);
             }
@@ -208,9 +222,6 @@ public final class StatementDetector implements TokenVisitor {
         START {
             @Override
             ParserState next(Token token, StatementDetector detector) {
-                if (!(token instanceof ReservedToken || token instanceof ParenthesisOpen)) {
-                    return forceOther(detector);
-                }
                 StateAfterStart stateAfterStart =
                         NEXT_AFTER_START.getOrDefault(token.textAsCharSequence(), INITIAL_OTHER);
                 detector.updateStatementType(stateAfterStart.type);
@@ -228,7 +239,80 @@ public final class StatementDetector implements TokenVisitor {
                 return forceOther(detector);
             }
         },
-        EXECUTE_PROCEDURE(true),
+        EXECUTE_PROCEDURE {
+            @Override
+            ParserState next(Token token, StatementDetector detector) {
+                if (detector.trySetTargetObject()) {
+                    return EXEC_PROC_ARGS;
+                }
+                return forceOther(detector);
+            }
+        },
+        // TODO Final state for now; maybe merge with CALL_PROC_ARGS and/or JDBC_CALL_PROC_ARGS
+        // TODO Do we need to parse and extract the arguments?
+        EXEC_PROC_ARGS(true),
+        CALL {
+            @Override
+            ParserState next(Token token, StatementDetector detector) {
+                if (detector.trySetTargetObject()) {
+                    return CALL_PROC_ARGS;
+                }
+                return forceOther(detector);
+            }
+        },
+        // TODO Final state for now; maybe merge with EXEC_PROC_ARGS and/or JDBC_CALL_PROC_ARGS
+        // TODO Do we need to parse and extract the arguments? Maybe for named support, or can we get that from prepare?
+        CALL_PROC_ARGS(true),
+        // NOTE: JDBC call escape detection only applies to CallableStatement V2 handling
+        JDBC_ESCAPE_START {
+            @Override
+            ParserState next(Token token, StatementDetector detector) {
+                if (token instanceof PositionalParameterToken) {
+                    return JDBC_ESCAPE_POSSIBLY_CALL_QM;
+                } else if (token.equalsIgnoreCase("CALL")) {
+                    // Call is not a reserved token in Firebird 5.0 and older
+                    detector.updateStatementType(LocalStatementType.JDBC_CALL_ESCAPE);
+                    return JDBC_ESCAPE_CALL;
+                }
+                return forceOther(detector);
+            }
+        },
+        // NOTE: JDBC call escape detection only applies to CallableStatement V2 handling
+        JDBC_ESCAPE_POSSIBLY_CALL_QM {
+            @Override
+            ParserState next(Token token, StatementDetector detector) {
+                if (token instanceof OperatorToken && token.equalsIgnoreCase("=")) {
+                    return JDBC_ESCAPE_POSSIBLY_CALL_EQ;
+                }
+                return forceOther(detector);
+            }
+        },
+        // NOTE: JDBC call escape detection only applies to CallableStatement V2 handling
+        JDBC_ESCAPE_POSSIBLY_CALL_EQ {
+            @Override
+            ParserState next(Token token, StatementDetector detector) {
+                if (token.equalsIgnoreCase("CALL")) {
+                    // Call is not a reserved token in Firebird 5.0 and older
+                    detector.updateStatementType(LocalStatementType.JDBC_CALL_RETURN_ESCAPE);
+                    return JDBC_ESCAPE_CALL;
+                }
+                return forceOther(detector);
+            }
+        },
+        // NOTE: JDBC call escape detection only applies to CallableStatement V2 handling
+        JDBC_ESCAPE_CALL {
+            @Override
+            ParserState next(Token token, StatementDetector detector) {
+                if (detector.trySetTargetObject()) {
+                    return JDBC_CALL_PROC_ARGS;
+                }
+                return forceOther(detector);
+            }
+        },
+        // TODO Final state for now; maybe merge with CALL_PROC_ARGS and/or EXEC_PROC_ARGS
+        // TODO We need to parse and extract the arguments
+        // NOTE: JDBC call escape detection only applies to CallableStatement V2 handling
+        JDBC_CALL_PROC_ARGS(true),
         UPDATE {
             @Override
             ParserState next(Token token, StatementDetector detector) {
@@ -362,6 +446,12 @@ public final class StatementDetector implements TokenVisitor {
             @Override
             ParserState next(Token token, StatementDetector detector) {
                 // This is invoked after the end of USING ... DO has been found
+                if (token instanceof CurlyBraceOpen) {
+                    // This is probably a CALL escape, but the normal handling cannot apply as USING can change how
+                    // parameters are defined and handled
+                    detector.updateStatementType(LocalStatementType.JDBC_ESCAPE_AFTER_USING);
+                    return OTHER;
+                }
                 return START.next(token, detector);
             }
         },

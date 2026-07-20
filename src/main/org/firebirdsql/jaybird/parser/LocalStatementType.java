@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2021-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2021-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jaybird.parser;
 
@@ -31,6 +31,40 @@ public enum LocalStatementType {
      * {@code EXECUTE PROCEDURE} statement.
      */
     EXECUTE_PROCEDURE(LocalStatementClass.DML),
+    /**
+     * {@code CALL} statement.
+     *
+     * @since 7
+     */
+    CALL(LocalStatementClass.DML),
+    /**
+     * JDBC call escape without return parameter (i.e. {@code {call procname ...}}).
+     * <p>
+     * Callable statement V2 only.
+     * </p>
+     *
+     * @since 7
+     */
+    JDBC_CALL_ESCAPE(LocalStatementClass.DML),
+    /**
+     * JDBC call escape with return parameter (i.e. {@code {?=call procname ...}}).
+     * <p>
+     * Callable statement V2 only.
+     * </p>
+     *
+     * @since 7
+     */
+    JDBC_CALL_RETURN_ESCAPE(LocalStatementClass.DML),
+    /**
+     * JDBC escape (probably CALL escape) after {@code USING ... DO}, we can't handle this the same as a bare call
+     * escape.
+     * <p>
+     * Callable statement V2 only.
+     * </p>
+     *
+     * @since 7
+     */
+    JDBC_ESCAPE_AFTER_USING(LocalStatementClass.DML),
     /**
      * {@code UPDATE} statement (or {@code UPDATE OR INSERT} before detection is complete).
      */
