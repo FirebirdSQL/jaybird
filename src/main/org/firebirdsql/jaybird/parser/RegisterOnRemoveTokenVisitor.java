@@ -2,7 +2,11 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jaybird.parser;
 
+import java.util.ArrayDeque;
 import java.util.Collection;
+import java.util.Deque;
+
+import static java.lang.System.Logger.Level.TRACE;
 
 /**
  * Decorating token visitor that will register other token visitors when the decorated visitor removes itself.
@@ -30,7 +34,8 @@ final class RegisterOnRemoveTokenVisitor<T extends TokenVisitor> implements Toke
     private final Collection<TokenVisitor> registerOnRemove;
     private final boolean notifyLastToken;
     private Token lastTokenSeen = DUMMY_NULL_TOKEN;
-    private VisitorRegistrar currentRegistrar = VisitorRegistrar.noActionRegistrar();
+    // Self-removal of the decorated visitor means afterRemove may be invoked during visitToken or complete
+    private final Deque<VisitorRegistrar> registrarStack = new ArrayDeque<>(2);
 
     /**
      * Creates a token visitor that registers other token visitors on self-removal of the decorated
@@ -72,59 +77,66 @@ final class RegisterOnRemoveTokenVisitor<T extends TokenVisitor> implements Toke
     @Override
     public void visitToken(Token token, VisitorRegistrar visitorRegistrar) {
         lastTokenSeen = token;
-        currentRegistrar = visitorRegistrar;
+        registrarStack.push(visitorRegistrar);
         try {
             decoratedTokenVisitor.visitToken(token, this);
         } finally {
-            currentRegistrar = VisitorRegistrar.noActionRegistrar();
+            registrarStack.pop();
         }
     }
 
     @Override
     public void complete(VisitorRegistrar visitorRegistrar) {
         lastTokenSeen = DUMMY_NULL_TOKEN;
-        currentRegistrar = visitorRegistrar;
+        registrarStack.push(visitorRegistrar);
         try {
             decoratedTokenVisitor.complete(this);
             for (TokenVisitor visitor : registerOnRemove) {
                 try {
                     visitor.complete(visitorRegistrar);
-                } catch (Exception ignored) {
+                } catch (Exception e) {
+                    System.getLogger(getClass().getName()).log(TRACE,
+                            () -> "Ignored exception notifying visitor %s of completion".formatted(visitor), e);
                 }
             }
         } finally {
-            currentRegistrar = VisitorRegistrar.noActionRegistrar();
+            registrarStack.pop();
         }
     }
 
     @Override
     public void addVisitor(TokenVisitor tokenVisitor) {
-        currentRegistrar.addVisitor(tokenVisitor);
+        currentRegistrar().addVisitor(tokenVisitor);
     }
 
     @Override
     public void removeVisitor(TokenVisitor tokenVisitor) {
-        VisitorRegistrar currentRegistrar = this.currentRegistrar;
-        if (tokenVisitor != decoratedTokenVisitor) {
-            // Allow other visitors to be removed
-            currentRegistrar.removeVisitor(tokenVisitor);
-            return;
-        }
+        currentRegistrar().removeVisitor(tokenVisitor != decoratedTokenVisitor ? tokenVisitor : this);
+    }
 
-        // Remove this decorator instead of the decorated visitor
-        currentRegistrar.removeVisitor(RegisterOnRemoveTokenVisitor.this);
-        registerOnRemove.forEach(currentRegistrar::addVisitor);
-        if (notifyLastToken && lastTokenSeen != DUMMY_NULL_TOKEN) {
-            registerOnRemove.forEach(visitor -> {
-                try {
-                    // Notification is done with the real registrar
-                    visitor.visitToken(lastTokenSeen, currentRegistrar);
-                } catch (RuntimeException e) {
-                    System.getLogger(getClass().getName()).log(System.Logger.Level.ERROR,
-                            "Ignored exception during token notification", e);
-                }
-            });
+    @Override
+    public void afterRemove(VisitorRegistrar visitorRegistrar) {
+        registrarStack.push(visitorRegistrar);
+        try {
+            registerOnRemove.forEach(visitorRegistrar::addVisitor);
+            if (notifyLastToken && lastTokenSeen != DUMMY_NULL_TOKEN) {
+                registerOnRemove.forEach(visitor -> {
+                    try {
+                        // Notification is done with the real registrar
+                        visitor.visitToken(lastTokenSeen, visitorRegistrar);
+                    } catch (RuntimeException e) {
+                        System.getLogger(getClass().getName()).log(TRACE,
+                                () -> "Ignored exception notifying visitor %s of afterRemove".formatted(visitor), e);
+                    }
+                });
+            }
+        } finally {
+            registrarStack.pop();
         }
+    }
+
+    private VisitorRegistrar currentRegistrar() {
+        return registrarStack.isEmpty() ? VisitorRegistrar.noActionRegistrar() : registrarStack.peek();
     }
 
 }
