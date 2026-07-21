@@ -22,7 +22,7 @@ public interface TokenVisitor {
      * @param token
      *         Token
      * @param visitorRegistrar
-     *         Visitor registrar (can be used to remove itself, or add other visitors); the registrar is only guaranteed
+     *         visitor registrar (can be used to remove itself, or add other visitors); the registrar is only guaranteed
      *         to be valid for the duration of this method call
      */
     void visitToken(Token token, VisitorRegistrar visitorRegistrar);
@@ -34,10 +34,25 @@ public interface TokenVisitor {
      * </p>
      *
      * @param visitorRegistrar
-     *         Visitor registrar (can be used to remove itself, or add other visitors); the registrar is only guaranteed
-     *         to be valid for the duration of this method call
+     *         visitor registrar (can be used to remove itself, or add/remove other visitors); the registrar is only
+     *         guaranteed to be valid for the duration of this method call
      */
     default void complete(VisitorRegistrar visitorRegistrar) {
+        // do nothing
+    }
+
+    /**
+     * Notification that this visitor was removed from {@code visitorRegistrar}.
+     * <p>
+     * Can be used for clean-up or additional completion actions. Implementations overriding this method may want to
+     * consider calling it from {@link #complete(VisitorRegistrar)} as well.
+     * </p>
+     *
+     * @param visitorRegistrar
+     *         visitor registrar (can be used to add/remove other visitors); the registrar is only guaranteed to be
+     *         valid for the duration of this method call
+     */
+    default void afterRemove(VisitorRegistrar visitorRegistrar) {
         // do nothing
     }
 

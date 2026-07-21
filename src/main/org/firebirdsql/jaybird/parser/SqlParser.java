@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import static java.lang.String.format;
 import static java.lang.System.Logger.Level.TRACE;
 
 /**
@@ -125,7 +124,8 @@ public final class SqlParser implements VisitorRegistrar {
                 visitor.visitToken(token, this);
             } catch (Exception e) {
                 if (log.isLoggable(TRACE)) {
-                    log.log(TRACE, format("Ignored exception notifying visitor %s of token %s", visitor, token), e);
+                    log.log(TRACE,
+                            () -> "Ignored exception notifying visitor %s of token %s".formatted(visitor, token), e);
                 }
             }
         }
@@ -137,7 +137,7 @@ public final class SqlParser implements VisitorRegistrar {
                 visitor.complete(this);
             } catch (Exception e) {
                 if (log.isLoggable(TRACE)) {
-                    log.log(TRACE, format("Ignored exception notifying visitor %s of completion", visitor), e);
+                    log.log(TRACE, () -> "Ignored exception notifying visitor %s of completion".formatted(visitor), e);
                 }
             }
         }
@@ -162,10 +162,16 @@ public final class SqlParser implements VisitorRegistrar {
 
     @Override
     public void removeVisitor(TokenVisitor tokenVisitor) {
-        visitors.remove(tokenVisitor);
+        try {
+            if (visitors.remove(tokenVisitor)) {
+                tokenVisitor.afterRemove(this);
+            }
+        } catch (RuntimeException e) {
+            log.log(TRACE, () -> "Ignored exception notifying visitor %s of afterRemove".formatted(tokenVisitor), e);
+        }
     }
 
-    public static class Builder {
+    public static final class Builder {
 
         private final SqlTokenizer.Builder tokenizerBuilder;
         private final List<TokenVisitor> visitors = new ArrayList<>();
