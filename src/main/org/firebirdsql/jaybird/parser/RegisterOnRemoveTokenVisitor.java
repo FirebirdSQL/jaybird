@@ -118,6 +118,7 @@ final class RegisterOnRemoveTokenVisitor<T extends TokenVisitor> implements Toke
     public void afterRemove(VisitorRegistrar visitorRegistrar) {
         registrarStack.push(visitorRegistrar);
         try {
+            decoratedTokenVisitor.afterRemove(this);
             registerOnRemove.forEach(visitorRegistrar::addVisitor);
             if (notifyLastToken && lastTokenSeen != DUMMY_NULL_TOKEN) {
                 registerOnRemove.forEach(visitor -> {

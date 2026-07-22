@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
 
+import static java.lang.System.Logger.Level.TRACE;
 import static java.util.Collections.unmodifiableMap;
 import static org.firebirdsql.jaybird.parser.CharSequenceComparison.caseInsensitiveComparator;
 
@@ -73,7 +74,6 @@ public final class StatementDetector implements TokenVisitor {
     private LocalStatementType statementType = LocalStatementType.UNKNOWN;
     private ParserState parserState = ParserState.START;
     private @Nullable ObjectReference targetObject;
-    private @Nullable ObjectReferenceExtractor targetObjectExtractor;
     private @Nullable ReturningClauseDetector returningClauseDetector;
 
     /**
@@ -131,8 +131,19 @@ public final class StatementDetector implements TokenVisitor {
             case INSERT_INTO:
             case DML_TARGET:
             case DML_TARGET_FORWARD_TOKEN: {
-                targetObjectExtractor = new ObjectReferenceExtractor();
-                TokenVisitor newVisitor = targetObjectExtractor.onRemoveRegister(this);
+                var objectExtractorWithFuture = ObjectReferenceExtractor.withFuture();
+                objectExtractorWithFuture.future().handle((@Nullable ObjectReference ref, @Nullable Throwable t) -> {
+                    if (ref != null) {
+                        setTargetObject(ref);
+                    } else {
+                        if (t != null) {
+                            System.getLogger(getClass().getName()).log(TRACE, "Exception getting object reference", t);
+                        }
+                        updateStatementType(LocalStatementType.OTHER);
+                    }
+                    return null;
+                });
+                TokenVisitor newVisitor = objectExtractorWithFuture.extractor().onRemoveRegister(this);
                 visitorRegistrar.addVisitor(newVisitor);
                 visitorRegistrar.removeVisitor(this);
                 if (parserState == ParserState.DML_TARGET_FORWARD_TOKEN) {
@@ -170,7 +181,7 @@ public final class StatementDetector implements TokenVisitor {
         // Handle DELETE FROM ... without WHERE, and EXECUTE PROCEDURE ... without arguments
         case EXECUTE_PROCEDURE, DML_TARGET -> {
             // TODO Maybe remove complete(..) and instead have the parser post an EOF token?
-            if (targetObject == null && !trySetTargetObject()) {
+            if (targetObject == null) {
                 updateStatementType(LocalStatementType.OTHER);
             }
         }
@@ -200,14 +211,8 @@ public final class StatementDetector implements TokenVisitor {
         this.targetObject = targetObject;
     }
 
-    boolean trySetTargetObject() {
-        if (targetObjectExtractor == null) return false;
-        try {
-            setTargetObject(targetObjectExtractor.toObjectReference());
-            return true;
-        } catch (IllegalStateException ignored) {
-            return false;
-        }
+    private boolean hasTargetObject() {
+        return targetObject != null;
     }
 
     private void updateStatementType(LocalStatementType statementType) {
@@ -242,7 +247,7 @@ public final class StatementDetector implements TokenVisitor {
         EXECUTE_PROCEDURE {
             @Override
             ParserState next(Token token, StatementDetector detector) {
-                if (detector.trySetTargetObject()) {
+                if (detector.hasTargetObject()) {
                     return EXEC_PROC_ARGS;
                 }
                 return forceOther(detector);
@@ -254,7 +259,7 @@ public final class StatementDetector implements TokenVisitor {
         CALL {
             @Override
             ParserState next(Token token, StatementDetector detector) {
-                if (detector.trySetTargetObject()) {
+                if (detector.hasTargetObject()) {
                     return CALL_PROC_ARGS;
                 }
                 return forceOther(detector);
@@ -303,7 +308,7 @@ public final class StatementDetector implements TokenVisitor {
         JDBC_ESCAPE_CALL {
             @Override
             ParserState next(Token token, StatementDetector detector) {
-                if (detector.trySetTargetObject()) {
+                if (detector.hasTargetObject()) {
                     return JDBC_CALL_PROC_ARGS;
                 }
                 return forceOther(detector);
@@ -349,7 +354,7 @@ public final class StatementDetector implements TokenVisitor {
         DML_TARGET {
             @Override
             ParserState next(Token token, StatementDetector detector) {
-                if (detector.trySetTargetObject()) {
+                if (detector.hasTargetObject()) {
                     return DML_POSSIBLE_ALIAS.next(token, detector);
                 }
                 return forceOther(detector);
@@ -396,7 +401,7 @@ public final class StatementDetector implements TokenVisitor {
         INSERT_INTO {
             @Override
             ParserState next(Token token, StatementDetector detector) {
-                if (detector.trySetTargetObject()) {
+                if (detector.hasTargetObject()) {
                     return FIND_RETURNING;
                 }
                 return forceOther(detector);
