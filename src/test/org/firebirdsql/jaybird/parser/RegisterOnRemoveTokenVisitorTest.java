@@ -46,11 +46,17 @@ class RegisterOnRemoveTokenVisitorTest {
             invocation.getArgument(1, VisitorRegistrar.class).removeVisitor(decoratedVisitor);
             return null;
         }).when(decoratedVisitor).visitToken(any(), any());
+        doAnswer(invocation -> {
+            invocation.getArgument(0, TokenVisitor.class).afterRemove(visitorRegistrar);
+            return null;
+        }).when(visitorRegistrar).removeVisitor(any());
 
         visitor.visitToken(token, visitorRegistrar);
 
         // NOTE: The actually removed visitor is the RegisterOnRemoveTokenVisitor instance
         verify(visitorRegistrar).removeVisitor(visitor);
+        // NOTE: The RegisterOnRemoveTokenVisitor is a visitor registrar for the decoratedVisitor
+        verify(decoratedVisitor).afterRemove(visitor);
         verify(visitorRegistrar).addVisitor(newVisitor);
         verifyNoMoreInteractions(visitorRegistrar, decoratedVisitor, newVisitor);
     }
@@ -62,11 +68,17 @@ class RegisterOnRemoveTokenVisitorTest {
             invocation.getArgument(1, VisitorRegistrar.class).removeVisitor(decoratedVisitor);
             return null;
         }).when(decoratedVisitor).visitToken(any(), any());
+        doAnswer(invocation -> {
+            invocation.getArgument(0, TokenVisitor.class).afterRemove(visitorRegistrar);
+            return null;
+        }).when(visitorRegistrar).removeVisitor(any());
 
         visitor.visitToken(token, visitorRegistrar);
 
         // NOTE: The actually removed visitor is the RegisterOnRemoveTokenVisitor instance
         verify(visitorRegistrar).removeVisitor(visitor);
+        // NOTE: The RegisterOnRemoveTokenVisitor is a visitor registrar for the decoratedVisitor
+        verify(decoratedVisitor).afterRemove(visitor);
         verify(visitorRegistrar).addVisitor(newVisitor);
         verify(visitorRegistrar).addVisitor(newVisitor2);
         verify(newVisitor).visitToken(eq(token), same(visitorRegistrar));
@@ -83,6 +95,10 @@ class RegisterOnRemoveTokenVisitorTest {
             return null;
         }).when(decoratedVisitor).visitToken(any(), any());
         doAnswer(invocation -> {
+            invocation.getArgument(0, TokenVisitor.class).afterRemove(visitorRegistrar);
+            return null;
+        }).when(visitorRegistrar).removeVisitor(any());
+        doAnswer(invocation -> {
             throw new RuntimeException("From newVisitor");
         }).when(newVisitor).visitToken(any(), any());
         doAnswer(invocation -> {
@@ -93,6 +109,8 @@ class RegisterOnRemoveTokenVisitorTest {
 
         // NOTE: The actually removed visitor is the RegisterOnRemoveTokenVisitor instance
         verify(visitorRegistrar).removeVisitor(visitor);
+        // NOTE: The RegisterOnRemoveTokenVisitor is a visitor registrar for the decoratedVisitor
+        verify(decoratedVisitor).afterRemove(visitor);
         verify(visitorRegistrar).addVisitor(newVisitor);
         verify(visitorRegistrar).addVisitor(newVisitor2);
         verify(newVisitor).visitToken(eq(token), same(visitorRegistrar));

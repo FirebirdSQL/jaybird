@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 
 /**
  * Token visitor to extract an object reference (identifier chain) from a string.
@@ -18,21 +20,40 @@ import java.util.Locale;
  * the object reference (ignoring whitespace and comments). It will unregister itself as soon as it receives a token
  * that is not part of an object reference.
  * </p>
- * <p>
- * If you want to reuse an instance of this token visitor, you must call {@link #reset()} before adding it to
- * the parser again.
- * </p>
  *
  * @author Mark Rotteveel
  * @since 7
  */
 public final class ObjectReferenceExtractor implements TokenVisitor {
 
+    private static final Consumer<?> NO_ACTION_CONSUMER = ob -> {
+    };
     // pre-sizing at 3, as for current usages we expect at most 3 identifiers (i.e. <schema>.<package>.<procedure>)
     private final List<Identifier> identifiers = new ArrayList<>(3);
     private @Nullable Token previousToken;
     private boolean previousTokenWasScopeSpecifierValue;
     private @Nullable UnexpectedTokenException unexpectedTokenException;
+    private final Consumer<ObjectReference> objectReferenceConsumer;
+    private final Consumer<RuntimeException> exceptionConsumer;
+
+    public ObjectReferenceExtractor() {
+        this(noActionConsumer(), noActionConsumer());
+    }
+
+    /**
+     * Creates an object reference extractor that will notify completion or failure.
+     *
+     * @param objectReferenceConsumer
+     *         will receive the complete object reference when found
+     * @param exceptionConsumer
+     *         for parsing errors, or when no or an incomplete object reference was found on (self)removal of this
+     *         visitor or parser completion; may receive multiple exceptions
+     */
+    public ObjectReferenceExtractor(Consumer<ObjectReference> objectReferenceConsumer,
+            Consumer<RuntimeException> exceptionConsumer) {
+        this.objectReferenceConsumer = objectReferenceConsumer;
+        this.exceptionConsumer = exceptionConsumer;
+    }
 
     @Override
     public void visitToken(Token token, VisitorRegistrar visitorRegistrar) {
@@ -86,16 +107,6 @@ public final class ObjectReferenceExtractor implements TokenVisitor {
         previousToken = token;
     }
 
-    /**
-     * Resets the state of the detector so it behaves as if it was just created.
-     */
-    public void reset() {
-        identifiers.clear();
-        previousToken = null;
-        previousTokenWasScopeSpecifierValue = false;
-        unexpectedTokenException = null;
-    }
-
     private boolean isScopeSpecifier(@Nullable Token token) {
         return token instanceof OperatorToken operatorToken && operatorToken.charAt(0) == '%';
     }
@@ -114,6 +125,16 @@ public final class ObjectReferenceExtractor implements TokenVisitor {
         } else if (isScopeSpecifier(previousToken)) {
             unexpectedTokenException = new UnexpectedTokenException(
                     "Last token was scope specifier (%), missing scope or other token", previousToken);
+        }
+        afterRemove(visitorRegistrar);
+    }
+
+    @Override
+    public void afterRemove(VisitorRegistrar visitorRegistrar) {
+        try {
+            objectReferenceConsumer.accept(toObjectReference());
+        } catch (RuntimeException e) {
+            exceptionConsumer.accept(e);
         }
     }
 
@@ -136,6 +157,25 @@ public final class ObjectReferenceExtractor implements TokenVisitor {
             throw new IllegalStateException("No identifiers were detected");
         }
         return ObjectReference.ofIdentifiers(identifiers);
+    }
+
+    /**
+     * Creates an object reference extractor with associated completable future to obtain the object reference or
+     * its failure.
+     *
+     * @return record providing access to both the object reference extractor and its future
+     */
+    public static ObjectReferenceExtractor.WithFuture withFuture() {
+        var future = new CompletableFuture<ObjectReference>();
+        return new WithFuture(new ObjectReferenceExtractor(future::complete, future::completeExceptionally), future);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> Consumer<T> noActionConsumer() {
+        return (Consumer<T>) NO_ACTION_CONSUMER;
+    }
+
+    public record WithFuture(ObjectReferenceExtractor extractor, CompletableFuture<ObjectReference> future) {
     }
 
 }
