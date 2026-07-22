@@ -30,9 +30,9 @@ class RegisterOnRemoveTokenVisitorTest {
 
     @Test
     void visitToken_forwardedToDecoratedVisitor(@Mock Token token) {
-        var visitor = new RegisterOnRemoveTokenVisitor<>(decoratedVisitor, List.of(newVisitor));
+        var registerOnRemove = new RegisterOnRemoveTokenVisitor<>(decoratedVisitor, List.of(newVisitor));
 
-        visitor.visitToken(token, visitorRegistrar);
+        registerOnRemove.visitToken(token, visitorRegistrar);
 
         //noinspection DataFlowIssue
         verify(decoratedVisitor).visitToken(eq(token), not(same(visitorRegistrar)));
@@ -41,7 +41,7 @@ class RegisterOnRemoveTokenVisitorTest {
 
     @Test
     void selfRemoveDuringVisitToken_registersNewVisitor_noTokenOnNewVisitor(@Mock Token token) {
-        var visitor = new RegisterOnRemoveTokenVisitor<>(decoratedVisitor, List.of(newVisitor));
+        var registerOnRemove = new RegisterOnRemoveTokenVisitor<>(decoratedVisitor, List.of(newVisitor));
         doAnswer(invocation -> {
             invocation.getArgument(1, VisitorRegistrar.class).removeVisitor(decoratedVisitor);
             return null;
@@ -51,19 +51,21 @@ class RegisterOnRemoveTokenVisitorTest {
             return null;
         }).when(visitorRegistrar).removeVisitor(any());
 
-        visitor.visitToken(token, visitorRegistrar);
+        registerOnRemove.visitToken(token, visitorRegistrar);
 
         // NOTE: The actually removed visitor is the RegisterOnRemoveTokenVisitor instance
-        verify(visitorRegistrar).removeVisitor(visitor);
+        verify(visitorRegistrar).removeVisitor(registerOnRemove);
         // NOTE: The RegisterOnRemoveTokenVisitor is a visitor registrar for the decoratedVisitor
-        verify(decoratedVisitor).afterRemove(visitor);
+        verify(decoratedVisitor).afterRemove(registerOnRemove);
         verify(visitorRegistrar).addVisitor(newVisitor);
         verifyNoMoreInteractions(visitorRegistrar, decoratedVisitor, newVisitor);
     }
 
     @Test
-    void selfRemoveDuringVisitToken_registersNewVisitors_tokenOnNewVisitors(@Mock Token token, @Mock TokenVisitor newVisitor2) {
-        var visitor = new RegisterOnRemoveTokenVisitor<>(decoratedVisitor, List.of(newVisitor, newVisitor2), true);
+    void selfRemoveDuringVisitToken_registersNewVisitors_tokenOnNewVisitors(@Mock Token token,
+            @Mock TokenVisitor newVisitor2) {
+        var registerOnRemove =
+                new RegisterOnRemoveTokenVisitor<>(decoratedVisitor, List.of(newVisitor, newVisitor2), true);
         doAnswer(invocation -> {
             invocation.getArgument(1, VisitorRegistrar.class).removeVisitor(decoratedVisitor);
             return null;
@@ -73,12 +75,12 @@ class RegisterOnRemoveTokenVisitorTest {
             return null;
         }).when(visitorRegistrar).removeVisitor(any());
 
-        visitor.visitToken(token, visitorRegistrar);
+        registerOnRemove.visitToken(token, visitorRegistrar);
 
         // NOTE: The actually removed visitor is the RegisterOnRemoveTokenVisitor instance
-        verify(visitorRegistrar).removeVisitor(visitor);
+        verify(visitorRegistrar).removeVisitor(registerOnRemove);
         // NOTE: The RegisterOnRemoveTokenVisitor is a visitor registrar for the decoratedVisitor
-        verify(decoratedVisitor).afterRemove(visitor);
+        verify(decoratedVisitor).afterRemove(registerOnRemove);
         verify(visitorRegistrar).addVisitor(newVisitor);
         verify(visitorRegistrar).addVisitor(newVisitor2);
         verify(newVisitor).visitToken(eq(token), same(visitorRegistrar));
@@ -89,7 +91,8 @@ class RegisterOnRemoveTokenVisitorTest {
     @Test
     void selfRemoveDuringVisitToken_registersNewVisitors_tokenOnNewVisitors_exceptionsIgnored(@Mock Token token,
             @Mock TokenVisitor newVisitor2) {
-        var visitor = new RegisterOnRemoveTokenVisitor<>(decoratedVisitor, List.of(newVisitor, newVisitor2), true);
+        var registerOnRemove =
+                new RegisterOnRemoveTokenVisitor<>(decoratedVisitor, List.of(newVisitor, newVisitor2), true);
         doAnswer(invocation -> {
             invocation.getArgument(1, VisitorRegistrar.class).removeVisitor(decoratedVisitor);
             return null;
@@ -105,12 +108,12 @@ class RegisterOnRemoveTokenVisitorTest {
             throw new RuntimeException("From newVisitor2");
         }).when(newVisitor2).visitToken(any(), any());
 
-        visitor.visitToken(token, visitorRegistrar);
+        registerOnRemove.visitToken(token, visitorRegistrar);
 
         // NOTE: The actually removed visitor is the RegisterOnRemoveTokenVisitor instance
-        verify(visitorRegistrar).removeVisitor(visitor);
+        verify(visitorRegistrar).removeVisitor(registerOnRemove);
         // NOTE: The RegisterOnRemoveTokenVisitor is a visitor registrar for the decoratedVisitor
-        verify(decoratedVisitor).afterRemove(visitor);
+        verify(decoratedVisitor).afterRemove(registerOnRemove);
         verify(visitorRegistrar).addVisitor(newVisitor);
         verify(visitorRegistrar).addVisitor(newVisitor2);
         verify(newVisitor).visitToken(eq(token), same(visitorRegistrar));
@@ -120,13 +123,13 @@ class RegisterOnRemoveTokenVisitorTest {
 
     @Test
     void registeringOtherVisitor_forwarded(@Mock Token token, @Mock TokenVisitor otherVisitor) {
-        var visitor = new RegisterOnRemoveTokenVisitor<>(decoratedVisitor, List.of(newVisitor), true);
+        var registerOnRemove = new RegisterOnRemoveTokenVisitor<>(decoratedVisitor, List.of(newVisitor), true);
         doAnswer(invocation -> {
             invocation.getArgument(1, VisitorRegistrar.class).addVisitor(otherVisitor);
             return null;
         }).when(decoratedVisitor).visitToken(any(), any());
 
-        visitor.visitToken(token, visitorRegistrar);
+        registerOnRemove.visitToken(token, visitorRegistrar);
 
         verify(visitorRegistrar).addVisitor(otherVisitor);
         verifyNoMoreInteractions(visitorRegistrar, decoratedVisitor, newVisitor, otherVisitor);
@@ -134,13 +137,13 @@ class RegisterOnRemoveTokenVisitorTest {
 
     @Test
     void removeOtherVisitor_forwarded(@Mock Token token, @Mock TokenVisitor otherVisitor) {
-        var visitor = new RegisterOnRemoveTokenVisitor<>(decoratedVisitor, List.of(newVisitor), true);
+        var registerOnRemove = new RegisterOnRemoveTokenVisitor<>(decoratedVisitor, List.of(newVisitor), true);
         doAnswer(invocation -> {
             invocation.getArgument(1, VisitorRegistrar.class).removeVisitor(otherVisitor);
             return null;
         }).when(decoratedVisitor).visitToken(any(), any());
 
-        visitor.visitToken(token, visitorRegistrar);
+        registerOnRemove.visitToken(token, visitorRegistrar);
 
         verify(visitorRegistrar).removeVisitor(otherVisitor);
         verifyNoMoreInteractions(visitorRegistrar, decoratedVisitor, newVisitor, otherVisitor);
@@ -148,9 +151,9 @@ class RegisterOnRemoveTokenVisitorTest {
 
     @Test
     void complete_forwardedToDecoratedVisitor_andOtherVisitors() {
-        var visitor = new RegisterOnRemoveTokenVisitor<>(decoratedVisitor, List.of(newVisitor));
+        var registerOnRemove = new RegisterOnRemoveTokenVisitor<>(decoratedVisitor, List.of(newVisitor));
 
-        visitor.complete(visitorRegistrar);
+        registerOnRemove.complete(visitorRegistrar);
 
         //noinspection DataFlowIssue
         verify(decoratedVisitor).complete(not(same(visitorRegistrar)));
