@@ -47,6 +47,10 @@ public final class StatementDetector implements TokenVisitor {
         // NOTE: This is a shortcut, if WITH is ever allowed as the first token of another statement type,
         // this must be changed to detect the first keyword after the entire WITH clause
         nextAfterStart.put("WITH", selectState);
+        // Firebird 5.0+ parenthesized query expression
+        // NOTE: This is a shortcut, if parenthesis at the top-level are ever allowed for anything other than SELECT (or
+        // SELECT-like statements), this needs to be reworked
+        nextAfterStart.put("(", selectState);
         nextAfterStart.put("EXECUTE", new StateAfterStart(ParserState.EXECUTE, LocalStatementType.OTHER));
         nextAfterStart.put("UPDATE", new StateAfterStart(ParserState.UPDATE, LocalStatementType.UPDATE));
         nextAfterStart.put("DELETE", new StateAfterStart(ParserState.DELETE, LocalStatementType.DELETE));
@@ -56,10 +60,6 @@ public final class StatementDetector implements TokenVisitor {
         nextAfterStart.put("ROLLBACK",
                 new StateAfterStart(ParserState.COMMIT_ROLLBACK, LocalStatementType.HARD_ROLLBACK));
         nextAfterStart.put("SET", new StateAfterStart(ParserState.SET, LocalStatementType.OTHER));
-        // Firebird 5.0+ parenthesized query expression
-        // NOTE: This is a shortcut, if parenthesis at the top-level are ever allowed for anything other than SELECT (or
-        // SELECT-like statements), this needs to be reworked
-        nextAfterStart.put("(", new StateAfterStart(ParserState.SELECT, LocalStatementType.SELECT));
         // Firebird 6.0+ USING ... DO; need to find end of the USING clause to detect actual statement type
         nextAfterStart.put("USING", new StateAfterStart(ParserState.FIND_USING_END, LocalStatementType.OTHER));
         // Firebird 6.0+ CALL
