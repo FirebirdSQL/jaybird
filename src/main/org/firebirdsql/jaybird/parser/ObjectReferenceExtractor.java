@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 /**
@@ -159,23 +158,9 @@ public final class ObjectReferenceExtractor implements TokenVisitor {
         return ObjectReference.ofIdentifiers(identifiers);
     }
 
-    /**
-     * Creates an object reference extractor with associated completable future to obtain the object reference or
-     * its failure.
-     *
-     * @return record providing access to both the object reference extractor and its future
-     */
-    public static ObjectReferenceExtractor.WithFuture withFuture() {
-        var future = new CompletableFuture<ObjectReference>();
-        return new WithFuture(new ObjectReferenceExtractor(future::complete, future::completeExceptionally), future);
-    }
-
     @SuppressWarnings("unchecked")
     private static <T> Consumer<T> noActionConsumer() {
         return (Consumer<T>) NO_ACTION_CONSUMER;
-    }
-
-    public record WithFuture(ObjectReferenceExtractor extractor, CompletableFuture<ObjectReference> future) {
     }
 
 }
