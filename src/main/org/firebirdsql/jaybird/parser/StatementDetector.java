@@ -131,19 +131,9 @@ public final class StatementDetector implements TokenVisitor {
             case INSERT_INTO:
             case DML_TARGET:
             case DML_TARGET_FORWARD_TOKEN: {
-                var objectExtractorWithFuture = ObjectReferenceExtractor.withFuture();
-                objectExtractorWithFuture.future().handle((@Nullable ObjectReference ref, @Nullable Throwable t) -> {
-                    if (ref != null) {
-                        setTargetObject(ref);
-                    } else {
-                        if (t != null) {
-                            System.getLogger(getClass().getName()).log(TRACE, "Exception getting object reference", t);
-                        }
-                        updateStatementType(LocalStatementType.OTHER);
-                    }
-                    return null;
-                });
-                TokenVisitor newVisitor = objectExtractorWithFuture.extractor().onRemoveRegister(this);
+                TokenVisitor newVisitor =
+                        new ObjectReferenceExtractor(this::acceptObjectReference, this::acceptObjectReferenceException)
+                                .onRemoveRegister(this);
                 visitorRegistrar.addVisitor(newVisitor);
                 visitorRegistrar.removeVisitor(this);
                 if (parserState == ParserState.DML_TARGET_FORWARD_TOKEN) {
@@ -171,6 +161,15 @@ public final class StatementDetector implements TokenVisitor {
                 break;
             }
         }
+    }
+
+    private void acceptObjectReference(ObjectReference ref) {
+        setTargetObject(ref);
+    }
+
+    private void acceptObjectReferenceException(Throwable t) {
+        System.getLogger(getClass().getName()).log(TRACE, "Exception getting object reference", t);
+        updateStatementType(LocalStatementType.OTHER);
     }
 
     @Override

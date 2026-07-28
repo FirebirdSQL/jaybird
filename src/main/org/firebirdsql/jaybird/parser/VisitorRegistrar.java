@@ -57,6 +57,10 @@ public interface VisitorRegistrar {
 
     /**
      * Removes a visitor - if already registered.
+     * <p>
+     * Implementations have to call {@link TokenVisitor#afterRemove(VisitorRegistrar)} on the removed visitor, if it was
+     * actually removed.
+     * </p>
      *
      * @param tokenVisitor
      *         Token visitor
