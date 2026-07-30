@@ -93,7 +93,7 @@ public final class LoggerFactory {
             return new ReflectionLoggerCreator(loggerImplementationClassName);
         } catch (Exception e) {
             e.printStackTrace();
-            return new JulLoggerCreator();
+            return JulLoggerCreator.INSTANCE;
         }
     }
 
