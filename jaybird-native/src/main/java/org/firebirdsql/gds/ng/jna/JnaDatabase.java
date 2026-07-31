@@ -173,7 +173,7 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
     @Override
     public void dropDatabase() throws SQLException {
         try {
-            checkConnected();
+            checkAttached();
             try (LockCloseable ignored = withLock()) {
                 try {
                     clientLibrary.isc_drop_database(statusVector, handle);
@@ -211,7 +211,7 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
     @Override
     public JnaTransaction startTransaction(final TransactionParameterBuffer tpb) throws SQLException {
         try {
-            checkConnected();
+            checkAttached();
             var transactionHandle = new IntByReference(0);
             byte[] tpbArray = tpb.toBytesWithType();
             try (LockCloseable ignored = withLock()) {
@@ -232,7 +232,7 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
     @Override
     public FbTransaction startTransaction(String statementText) throws SQLException {
         try {
-            checkConnected();
+            checkAttached();
             var transactionHandle = new IntByReference(0);
             byte[] statementArray = getEncoding().encodeToCharset(statementText);
             try (LockCloseable ignored = withLock()) {
@@ -253,7 +253,7 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
     @Override
     public FbTransaction reconnectTransaction(long transactionId) throws SQLException {
         try {
-            checkConnected();
+            checkAttached();
             final byte[] transactionIdBuffer = getTransactionIdBuffer(transactionId);
 
             final IntByReference transactionHandle = new IntByReference(0);
@@ -276,7 +276,7 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
     @Override
     public JnaStatement createStatement(@Nullable FbTransaction transaction) throws SQLException {
         try {
-            checkConnected();
+            checkAttached();
             final JnaStatement stmt = new JnaStatement(this);
             stmt.addExceptionListener(exceptionListenerDispatcher);
             stmt.setTransaction(transaction);
@@ -423,7 +423,7 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
     @Override
     public void queueEvent(EventHandle eventHandle) throws SQLException {
         try {
-            checkConnected();
+            checkAttached();
             final JnaEventHandle jnaEventHandle = validateEventHandle(eventHandle);
 
             try (LockCloseable ignored = withLock()) {
@@ -451,7 +451,7 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
     @Override
     public void cancelEvent(EventHandle eventHandle) throws SQLException {
         try {
-            checkConnected();
+            checkAttached();
             final JnaEventHandle jnaEventHandle = validateEventHandle(eventHandle);
 
             try (LockCloseable ignored = withLock()) {

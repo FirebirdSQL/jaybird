@@ -150,20 +150,25 @@ public abstract class AbstractFbAttachment<T extends AbstractConnection<? extend
     /**
      * Checks if the attachment is connected, and throws a {@link SQLException} if it isn't connected.
      * <p>
-     * Implementations where connected and attached are indistinguishable may call {@link #checkAttached()} or
-     * vice versa.
+     * In general, {@link #checkAttached()} should be used. An attachment might be connected (e.g. TCP/IP connection
+     * established to the server), but not (yet) attached to a database or service.
      * </p>
+     *
+     * @see #checkAttached()
      */
     protected abstract void checkConnected() throws SQLException;
 
     /**
-     * Returns if this attachment is connected as checked by {@link #checkConnected()}.
+     * Returns {@code true} if this attachment is connected as checked by {@link #checkConnected()}.
      * <p>
      * In general, {@link #isAttached()} should be used. An attachment might be connected (e.g. TCP/IP connection
      * established to the server), but not (yet) attached to a database or service.
      * </p>
      *
      * @return {@code true} if connected
+     * @see #isAttached()
+     * @see #checkAttached()
+     * @see #checkConnected()
      * @since 7
      */
     protected abstract boolean isConnected();
