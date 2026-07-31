@@ -36,7 +36,11 @@ public enum FbClientFeature {
     
     STATEMENT_TIMEOUT("fb_dsql_set_timeout"),
     // Can be used to identify Firebird 3.0 or higher fbclient
-    FB_PING("fb_ping");
+    FB_PING("fb_ping"),
+    /**
+     * @since 5.0.13
+     */
+    FB_DISCONNECT_TRANSACTION("fb_disconnect_transaction");
 
     // If a feature depends on multiple methods, consider changing this to a list or set
     private final String featureMethod;

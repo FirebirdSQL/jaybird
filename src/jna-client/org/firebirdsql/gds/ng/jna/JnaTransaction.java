@@ -185,4 +185,26 @@ public class JnaTransaction extends AbstractFbTransaction {
     private void processStatusVector() throws SQLException {
         getDatabase().processStatusVector(statusVector, null);
     }
+
+    @SuppressWarnings("deprecation")
+    @Override
+    protected void finalize() throws Throwable {
+        try {
+            JnaDatabase db = getDatabase();
+            if (handle.getValue() == 0
+                    || !db.hasFeature(FbClientFeature.FB_DISCONNECT_TRANSACTION)
+                    || !db.isAttached()) return;
+            /*
+             ACTIVE transactions are held in AbstractFbDatabase.activeTransactions, so such cleanup would only
+             happen when the connection itself was also GC'd, which means an attempt to roll back would likely fail
+             anyway (and the server will perform a rollback eventually), so we don't perform any action other than
+             fb_disconnect_transaction
+            */
+            db.getClientLibrary()
+                    .fb_disconnect_transaction(statusVector, handle);
+            // We intentionally ignore the status vector result
+        } finally {
+            super.finalize();
+        }
+    }
 }

@@ -59,10 +59,17 @@ This change was backported from Jaybird 6.0.6.
 Fix was contributed by Artyom Abakumov, and backport from Jaybird 6.0.6.
 * Improvement: Support customization of service requests in service managers (issue:[947])
 * Dependency update: updated `net.java.dev.jna:jna` from 5.18.1 to 5.19.1 (used by `jaybird-native`) (issue:[952])
-* Added `TransactionState.ABORTED_UNKNOWN`.
+* Added `TransactionState.ABORTED_UNKNOWN` (issue:[953])
 +
 This state is used when a commit, rollback, or prepare failed with an exception that Jaybird considers to indicate a broken connection.
 For end-users of Jaybird, this change has no real impact, except it may change the state logged for certain failures ending a transaction.
+* Changed: Finalization was removed from `AbstractFbTransaction` and added to `JnaTransaction` (issue:[953])
++
+Given active transactions are normally only eligible for GC if the connection itself is eligible for GC, the attempt to roll back an active transaction from its finalizer is unnecessary (closing the connection already results in a server-side rollback).
+This could also result in warnings logged about failures to roll back as the underlying connection could already have been closed.
++
+For `JnaTransaction`, the new finalizer will only attempt to disconnect the transaction with `fb_disconnect_transaction`.
+This is similar to what Jaybird 6 already does.
 
 [#jaybird-5-0-12-changelog]
 === Jaybird 5.0.12
