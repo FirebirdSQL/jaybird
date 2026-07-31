@@ -54,7 +54,7 @@ Fix was contributed by Artyom Abakumov.
 * Dependency update: updated `org.bouncycastle:bcprov-jdk18on` from 1.83 to 1.84 (used by `chacha64-plugin`) (issue:[941])
 * Improvement: Support customization of service requests in service managers (issue:[946])
 * Dependency update: updated `net.java.dev.jna:jna-jpms` from 5.18.1 to 5.19.1 (used by `jaybird-native`) (issue:[951])
-* Added `TransactionState.ABORTED_UNKNOWN`.
+* Added `TransactionState.ABORTED_UNKNOWN` (issue:[955])
 +
 This state is used when a commit, rollback, or prepare failed with an exception that Jaybird considers to indicate a broken connection.
 For end-users of Jaybird, this change has no real impact, except it may change the state logged for certain failures ending a transaction.
