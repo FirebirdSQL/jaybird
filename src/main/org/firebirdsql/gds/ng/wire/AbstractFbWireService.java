@@ -104,21 +104,17 @@ public abstract class AbstractFbWireService extends AbstractFbService<WireServic
     }
 
     /**
-     * Checks if a physical connection to the server is established and if the
-     * connection is attached to a database.
+     * Checks if a physical connection to the server is established and if the connection is attached to a database.
      * <p>
-     * This method calls {@link #checkConnected()}, so it is not necessary to
-     * call both.
+     * This method calls {@link #checkConnected()}, so it is not necessary to call both.
      * </p>
      *
      * @throws SQLException
-     *         If the database not connected or attached.
+     *         if the service is not connected or attached
      */
-    protected final void checkAttached() throws SQLException {
+    public final void checkAttached() throws SQLException {
         checkConnected();
-        if (!isAttached()) {
-            throw FbExceptionBuilder.toNonTransientConnectionException(JaybirdErrorCodes.jb_notAttachedToDatabase);
-        }
+        super.checkAttached();
     }
 
     @Override

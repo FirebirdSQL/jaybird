@@ -149,6 +149,10 @@ public abstract class AbstractFbAttachment<T extends AbstractConnection<? extend
 
     /**
      * Checks if the attachment is connected, and throws a {@link SQLException} if it isn't connected.
+     * <p>
+     * Implementations where connected and attached are indistinguishable may call {@link #checkAttached()} or
+     * vice versa.
+     * </p>
      */
     protected abstract void checkConnected() throws SQLException;
 

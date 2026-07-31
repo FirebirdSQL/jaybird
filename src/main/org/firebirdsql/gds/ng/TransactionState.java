@@ -57,6 +57,26 @@ public enum TransactionState {
         Set<TransactionState> createValidTransitionSet() {
             return EnumSet.noneOf(TransactionState.class);
         }
+    },
+    /**
+     * State used when a transaction was aborted with an unknown result. For example, failure to commit, rollback, or
+     * prepare due to broken connections (IO errors, or the connection already being closed).
+     * <p>
+     * In most cases, the transaction is probably rolled back, but we're not sure. For example, the commit could have
+     * been received and processed by the server, but a subsequent connection failure occurred before the response was
+     * received. Similar for a transaction prepare (first step of two-phase commit).
+     * </p>
+     * <p>
+     * There are no valid transitions to and from this state; it can only be forcibly set.
+     * </p>
+     *
+     * @since 7
+     */
+    ABORTED_UNKNOWN {
+        @Override
+        Set<TransactionState> createValidTransitionSet() {
+            return EnumSet.noneOf(TransactionState.class);
+        }
     };
 
     private @Nullable Set<TransactionState> validTransitions;

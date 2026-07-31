@@ -68,9 +68,7 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
 
     @Override
     protected final void checkConnected() throws SQLException {
-        if (!isConnected()) {
-            throw FbExceptionBuilder.toException(JaybirdErrorCodes.jb_notAttachedToDatabase);
-        }
+        checkAttached();
     }
 
     @Override

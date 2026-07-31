@@ -4,7 +4,6 @@ package org.firebirdsql.gds.ng.jna;
 
 import com.sun.jna.ptr.IntByReference;
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ServiceParameterBuffer;
 import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.impl.ServiceParameterBufferImp;
@@ -68,9 +67,7 @@ public final class JnaService extends AbstractFbService<JnaServiceConnection> im
 
     @Override
     protected void checkConnected() throws SQLException {
-        if (!isAttached()) {
-            throw FbExceptionBuilder.toException(JaybirdErrorCodes.jb_notAttachedToDatabase);
-        }
+        checkAttached();
     }
 
     @Override

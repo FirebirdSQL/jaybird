@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2025-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire;
 
@@ -246,7 +246,7 @@ class InlineBlobCacheTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = TransactionState.class, names = { "PREPARED", "COMMITTED", "ROLLED_BACK" },
+    @EnumSource(value = TransactionState.class, names = { "PREPARED", "COMMITTED", "ROLLED_BACK", "ABORTED_UNKNOWN" },
             mode = EnumSource.Mode.EXCLUDE )
     void transactionStateChangesThatDoNotRemoveBlobsForThatTransaction(TransactionState newState) {
         var cache = new InlineBlobCache(database);
@@ -281,7 +281,7 @@ class InlineBlobCacheTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = TransactionState.class, names = { "PREPARED", "COMMITTED", "ROLLED_BACK" })
+    @EnumSource(value = TransactionState.class, names = { "PREPARED", "COMMITTED", "ROLLED_BACK", "ABORTED_UNKNOWN" })
     void transactionStateChangesThatRemoveBlobsForThatTransaction(TransactionState newState) {
         var cache = new InlineBlobCache(database);
         final int transaction1Handle = 1;
