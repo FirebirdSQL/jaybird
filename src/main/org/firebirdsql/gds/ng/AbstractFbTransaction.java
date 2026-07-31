@@ -93,6 +93,15 @@ public abstract class AbstractFbTransaction implements FbTransaction {
         }
     }
 
+    protected final void forceAbortedUnknownState() throws SQLException {
+        try (LockCloseable ignored = withLock()) {
+            final TransactionState currentState = state;
+            if (currentState == TransactionState.ABORTED_UNKNOWN) return;
+            state = TransactionState.ABORTED_UNKNOWN;
+            transactionListenerDispatcher.transactionStateChanged(this, TransactionState.ABORTED_UNKNOWN, currentState);
+        }
+    }
+
     @Override
     public final void addTransactionListener(TransactionListener listener) {
         transactionListenerDispatcher.addListener(listener);
@@ -169,4 +178,9 @@ public abstract class AbstractFbTransaction implements FbTransaction {
     protected FbDatabase getDatabase() {
         return database;
     }
+
+    protected void checkDbAttached() throws SQLException {
+        database.checkAttached();
+    }
+
 }

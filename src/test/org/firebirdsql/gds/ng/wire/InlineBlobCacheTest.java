@@ -262,7 +262,7 @@ class InlineBlobCacheTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = TransactionState.class, names = { "PREPARED", "COMMITTED", "ROLLED_BACK" },
+    @EnumSource(value = TransactionState.class, names = { "PREPARED", "COMMITTED", "ROLLED_BACK", "ABORTED_UNKNOWN" },
             mode = EnumSource.Mode.EXCLUDE )
     void transactionStateChangesThatDoNotRemoveBlobsForThatTransaction(TransactionState newState) {
         InlineBlobCache cache = new InlineBlobCache(database);
@@ -297,7 +297,7 @@ class InlineBlobCacheTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = TransactionState.class, names = { "PREPARED", "COMMITTED", "ROLLED_BACK" })
+    @EnumSource(value = TransactionState.class, names = { "PREPARED", "COMMITTED", "ROLLED_BACK", "ABORTED_UNKNOWN" })
     void transactionStateChangesThatRemoveBlobsForThatTransaction(TransactionState newState) {
         InlineBlobCache cache = new InlineBlobCache(database);
         final int transaction1Handle = 1;

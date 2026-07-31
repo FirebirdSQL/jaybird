@@ -26,6 +26,7 @@ package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.IEncodingFactory;
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.ng.listeners.ExceptionListenable;
 
@@ -81,9 +82,25 @@ public interface FbAttachment extends AutoCloseable, ExceptionListenable {
     /**
      * Current attachment status.
      *
-     * @return {@code true} if connected to the server and attached to a database or service, {@code false} otherwise.
+     * @return {@code true} if connected to the server and attached to a database or service, {@code false} otherwise
+     * @see #checkAttached()
      */
     boolean isAttached();
+
+    /**
+     * Checks if a physical connection to the server is established and if the connection is attached to a database or
+     * service.
+     *
+     * @throws SQLException
+     *         if the database or service is not connected or attached
+     * @see #isAttached()
+     * @since 5.0.13
+     */
+    default void checkAttached() throws SQLException {
+        if (!isAttached()) {
+            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_notAttachedToDatabase).toSQLException();
+        }
+    }
 
     /**
      * @return The {@link IEncodingFactory} for this connection

@@ -59,6 +59,10 @@ This change was backported from Jaybird 6.0.6.
 Fix was contributed by Artyom Abakumov, and backport from Jaybird 6.0.6.
 * Improvement: Support customization of service requests in service managers (issue:[947])
 * Dependency update: updated `net.java.dev.jna:jna` from 5.18.1 to 5.19.1 (used by `jaybird-native`) (issue:[952])
+* Added `TransactionState.ABORTED_UNKNOWN`.
++
+This state is used when a commit, rollback, or prepare failed with an exception that Jaybird considers to indicate a broken connection.
+For end-users of Jaybird, this change has no real impact, except it may change the state logged for certain failures ending a transaction.
 
 [#jaybird-5-0-12-changelog]
 === Jaybird 5.0.12
@@ -1755,6 +1759,17 @@ Other breaking changes to the internal API in Jaybird 5.0.11 unrelated to the tr
 ** `readNextOperation` now also throws `SQLException` -- if the connection is closed.
 * `FbWireOperations`
 ** `readNextOperation` now also throws `SQLException` -- if the connection is closed.
+
+[#breaking-changes-internal-api-5-0-13]
+==== Breaking changes internal API for 5.0.13
+
+A new terminal transaction state `ABORTED_UNKNOWN` was added.
+This state is used when commit, rollback, or prepare fail with an exception indicating a broken connection.
+
+It can be reported for state changes from `ACTIVE`, `COMMITTING`, `ROLLING_BACK`, `PREPARING` and `PREPARED`.
+
+The interface `FbAttachment` received a method `checkAttached() throws SQLException` (with a default implementation).
+Protected methods of the same name in subclasses are now public.
 
 [#breaking-changes-unlikely]
 === Unlikely breaking changes
