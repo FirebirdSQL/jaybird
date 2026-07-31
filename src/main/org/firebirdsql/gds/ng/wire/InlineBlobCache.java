@@ -186,7 +186,8 @@ public final class InlineBlobCache implements DatabaseListener, TransactionListe
      * </p>
      */
     private static final Set<TransactionState> CLEAN_CACHE_ON_TRANSACTION_STATES = unmodifiableSet(
-            EnumSet.of(TransactionState.PREPARED, TransactionState.COMMITTED, TransactionState.ROLLED_BACK));
+            EnumSet.of(TransactionState.PREPARED, TransactionState.COMMITTED, TransactionState.ROLLED_BACK,
+                    TransactionState.ABORTED_UNKNOWN));
 
     @Override
     public void transactionStateChanged(FbTransaction transaction, TransactionState newState,

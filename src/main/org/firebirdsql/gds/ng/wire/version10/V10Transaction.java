@@ -24,6 +24,7 @@ import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.FbWireTransaction;
 import org.firebirdsql.gds.ng.wire.TransmitAction;
 import org.firebirdsql.gds.ng.wire.XdrStreamAccess;
+import org.firebirdsql.jaybird.xca.FatalErrorHelper;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -90,10 +91,14 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
     @Override
     public void commit() throws SQLException {
         try (LockCloseable ignored = withLock()) {
+            checkDbAttached();
             switchState(TransactionState.COMMITTING);
             finishTransaction(op_commit);
             switchState(TransactionState.COMMITTED);
         } catch (SQLException e) {
+            if (FatalErrorHelper.isBrokenConnection(e)) {
+                forceAbortedUnknownState();
+            }
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
         } finally {
@@ -104,10 +109,14 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
     @Override
     public void rollback() throws SQLException {
         try (LockCloseable ignored = withLock()) {
+            checkDbAttached();
             switchState(TransactionState.ROLLING_BACK);
             finishTransaction(op_rollback);
             switchState(TransactionState.ROLLED_BACK);
         } catch (SQLException e) {
+            if (FatalErrorHelper.isBrokenConnection(e)) {
+                forceAbortedUnknownState();
+            }
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
         } finally {
@@ -137,10 +146,14 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
     @Override
     public void prepare(byte[] recoveryInformation) throws SQLException {
         try (LockCloseable ignored = withLock()) {
+            checkDbAttached();
             switchState(TransactionState.PREPARING);
             sendPrepare(recoveryInformation);
             receivePrepareResponse();
         } catch (SQLException e) {
+            if (FatalErrorHelper.isBrokenConnection(e)) {
+                forceAbortedUnknownState();
+            }
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
         } finally {

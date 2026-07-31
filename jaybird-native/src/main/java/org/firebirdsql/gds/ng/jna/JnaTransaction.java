@@ -25,6 +25,7 @@ import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.TransactionState;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.jaybird.util.Cleaners;
+import org.firebirdsql.jaybird.xca.FatalErrorHelper;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.ISC_STATUS;
 
@@ -82,14 +83,16 @@ public class JnaTransaction extends AbstractFbTransaction {
     @Override
     public void commit() throws SQLException {
         try (LockCloseable ignored = withLock()) {
-            final JnaDatabase db = getDatabase();
-            db.checkConnected();
+            checkDbAttached();
             switchState(TransactionState.COMMITTING);
             clientLibrary.isc_commit_transaction(statusVector, handle);
             processStatusVector();
             switchState(TransactionState.COMMITTED);
-            cleanable.clean();
+            clean();
         } catch (SQLException e) {
+            if (FatalErrorHelper.isBrokenConnection(e)) {
+                forceAbortedUnknownState();
+            }
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
         } finally {
@@ -100,14 +103,16 @@ public class JnaTransaction extends AbstractFbTransaction {
     @Override
     public void rollback() throws SQLException {
         try (LockCloseable ignored = withLock()) {
-            final JnaDatabase db = getDatabase();
-            db.checkConnected();
+            checkDbAttached();
             switchState(TransactionState.ROLLING_BACK);
             clientLibrary.isc_rollback_transaction(statusVector, handle);
             processStatusVector();
             switchState(TransactionState.ROLLED_BACK);
-            cleanable.clean();
+            clean();
         } catch (SQLException e) {
+            if (FatalErrorHelper.isBrokenConnection(e)) {
+                forceAbortedUnknownState();
+            }
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
         } finally {
@@ -119,8 +124,7 @@ public class JnaTransaction extends AbstractFbTransaction {
     public void prepare(byte[] recoveryInformation) throws SQLException {
         boolean noRecoveryInfo = recoveryInformation == null || recoveryInformation.length == 0;
         try (LockCloseable ignored = withLock()) {
-            final JnaDatabase db = getDatabase();
-            db.checkConnected();
+            checkDbAttached();
             switchState(TransactionState.PREPARING);
             if (noRecoveryInfo) {
                 clientLibrary.isc_prepare_transaction(statusVector, handle);
@@ -131,6 +135,9 @@ public class JnaTransaction extends AbstractFbTransaction {
             processStatusVector();
             switchState(TransactionState.PREPARED);
         } catch (SQLException e) {
+            if (FatalErrorHelper.isBrokenConnection(e)) {
+                forceAbortedUnknownState();
+            }
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
         } finally {
@@ -143,8 +150,7 @@ public class JnaTransaction extends AbstractFbTransaction {
         try {
             final ByteBuffer responseBuffer = ByteBuffer.allocateDirect(maxBufferLength);
             try (LockCloseable ignored = withLock()) {
-                final JnaDatabase db = getDatabase();
-                db.checkConnected();
+                checkDbAttached();
                 clientLibrary.isc_transaction_info(statusVector, handle, (short) requestItems.length, requestItems,
                         (short) maxBufferLength, responseBuffer);
                 processStatusVector();
@@ -160,6 +166,16 @@ public class JnaTransaction extends AbstractFbTransaction {
 
     private void processStatusVector() throws SQLException {
         getDatabase().processStatusVector(statusVector, null);
+    }
+
+    @Override
+    protected void forceAbortedUnknownState() {
+        super.forceAbortedUnknownState();
+        clean();
+    }
+
+    private void clean() {
+        cleanable.clean();
     }
 
     private static final class CleanupAction implements Runnable, DatabaseListener {
