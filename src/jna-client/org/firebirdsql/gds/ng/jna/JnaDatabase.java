@@ -500,10 +500,11 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
 
     @Override
     protected void finalize() throws Throwable {
-        try {
-            if (isAttached()) {
-                safelyDetach();
-            }
+        try (LockCloseable ignored = withLock()) {
+            if (handle.getValue() == 0 || !isAttached()) return;
+            clientLibrary.fb_cancel_operation(
+                    new ISC_STATUS[JnaDatabase.STATUS_VECTOR_SIZE], handle, (short) fb_cancel_abort);
+            // Intentionally not processing status vector
         } finally {
             super.finalize();
         }

@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.gds.ng.wire;
 
+import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
@@ -242,4 +243,17 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
             forceState(StatementState.ERROR);
         }
     }
+
+    @Override
+    protected void finalize() throws Throwable {
+        if (getState() == StatementState.CLOSED) return;
+        try (LockCloseable ignored = withLock()) {
+            StatementState state = getState();
+            if (state == StatementState.NEW || state == StatementState.CLOSED || !database.isAttached()) return;
+            free(ISCConstants.DSQL_drop);
+        } finally {
+            super.finalize();
+        }
+    }
+
 }

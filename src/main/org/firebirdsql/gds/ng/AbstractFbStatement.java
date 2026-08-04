@@ -691,15 +691,6 @@ public abstract class AbstractFbStatement implements FbStatement {
     }
 
     @Override
-    protected void finalize() throws Throwable {
-        try {
-            if (getState() != StatementState.CLOSED) close();
-        } finally {
-            super.finalize();
-        }
-    }
-
-    @Override
     public FbTransaction getTransaction() {
         return transaction;
     }

@@ -482,4 +482,18 @@ public class JnaStatement extends AbstractFbStatement {
     private void processStatusVector() throws SQLException {
         getDatabase().processStatusVector(statusVector, getStatementWarningCallback());
     }
+
+    @Override
+    protected void finalize() throws Throwable {
+        if (getState() == StatementState.CLOSED) return;
+        try (LockCloseable ignored = withLock()) {
+            if (handle.getValue() == 0 || !database.isAttached()) return;
+            clientLibrary.isc_dsql_free_statement(
+                    new ISC_STATUS[JnaDatabase.STATUS_VECTOR_SIZE], handle, (short) ISCConstants.DSQL_drop);
+            // We're intentionally not processing the status vector
+        } finally {
+            super.finalize();
+        }
+    }
+
 }

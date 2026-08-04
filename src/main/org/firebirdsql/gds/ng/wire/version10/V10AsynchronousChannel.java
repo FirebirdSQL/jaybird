@@ -305,15 +305,6 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
         }
     }
 
-    @Override
-    protected void finalize() throws Throwable {
-        try {
-            close();
-        } finally {
-            super.finalize();
-        }
-    }
-
     private class ChannelDatabaseListener implements DatabaseListener {
 
         @Override

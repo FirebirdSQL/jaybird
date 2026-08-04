@@ -190,18 +190,4 @@ public abstract class AbstractFbWireService extends AbstractFbService<WireServic
         }
     }
 
-    @Override
-    protected void finalize() throws Throwable {
-        try {
-            if (!connection.isConnected()) return;
-            if (isAttached()) {
-                safelyDetach();
-            } else {
-                closeConnection();
-            }
-        } finally {
-            super.finalize();
-        }
-    }
-
 }
