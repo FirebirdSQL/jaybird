@@ -139,7 +139,7 @@ public final class ObjectReferenceExtractor implements TokenVisitor {
 
     @Override
     public TokenVisitor onRemoveRegister(Collection<TokenVisitor> visitors) {
-        return new RegisterOnRemoveTokenVisitor<>(this, visitors, true);
+        return new RegisterOnRemoveTokenVisitor<>(this, visitors, Boolean.TRUE::booleanValue);
     }
 
     /**

@@ -5,6 +5,7 @@ package org.firebirdsql.jaybird.parser;
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Deque;
+import java.util.function.BooleanSupplier;
 
 import static java.lang.System.Logger.Level.TRACE;
 
@@ -32,43 +33,47 @@ final class RegisterOnRemoveTokenVisitor<T extends TokenVisitor> implements Toke
 
     private final T decoratedTokenVisitor;
     private final Collection<TokenVisitor> registerOnRemove;
-    private final boolean notifyLastToken;
+    private final BooleanSupplier notifyLastToken;
     private Token lastTokenSeen = DUMMY_NULL_TOKEN;
     // Self-removal of the decorated visitor means afterRemove may be invoked during visitToken or complete
     private final Deque<VisitorRegistrar> registrarStack = new ArrayDeque<>(2);
 
     /**
-     * Creates a token visitor that registers other token visitors on self-removal of the decorated
-     * {@code tokenVisitor}.
+     * Creates a token visitor that registers other token visitors on self-removal of {@code tokenVisitor}.
      * <p>
      * The last consumed token will not be notified. If token notification is needed, use
-     * {@link #RegisterOnRemoveTokenVisitor(TokenVisitor, Collection, boolean)} with {@code true}.
+     * {@link #RegisterOnRemoveTokenVisitor(TokenVisitor, Collection, BooleanSupplier)} with a supplier returning
+     * {@code true}.
      * </p>
      *
      * @param tokenVisitor
      *         token visitor decorated by this instance
      * @param registerOnRemove
      *         token visitors to register on self-removal of {@code tokenVisitor} (the collection is used directly)
-     * @see #RegisterOnRemoveTokenVisitor(TokenVisitor, Collection, boolean)
+     * @see #RegisterOnRemoveTokenVisitor(TokenVisitor, Collection, BooleanSupplier)
      */
     RegisterOnRemoveTokenVisitor(T tokenVisitor, Collection<TokenVisitor> registerOnRemove) {
-        this(tokenVisitor, registerOnRemove, false);
+        this(tokenVisitor, registerOnRemove, Boolean.FALSE::booleanValue);
     }
 
     /**
-     * Creates a token visitor that registers other token visitors on self-removal of the decorated
-     * {@code tokenVisitor}.
+     * Creates a token visitor that registers other token visitors on self-removal of {@code tokenVisitor}.
+     * <p>
+     * The boolean supplier, {@code notifyLastToken} will only be called on remove when registering
+     * the {@code registerOnRemove} visitors. This can be used for dynamic decisions for token notification, for example
+     * if a {@code tokenVisitor} sometimes, but not always, needs to consume an extra token to decide it's done.
+     * </p>
      *
      * @param tokenVisitor
      *         token visitor decorated by this instance
      * @param registerOnRemove
      *         token visitors to register on self-removal of {@code tokenVisitor}
      * @param notifyLastToken
-     *         if {@code true}, after visitors in {@code registerOnRemove} have been registered, they will be notified
-     *         of the last token consumed by {@code tokenVisitor}
+     *         if supplying {@code true}, after visitors in {@code registerOnRemove} have been registered, they will be
+     *         notified of the last token consumed by {@code tokenVisitor}
      */
     RegisterOnRemoveTokenVisitor(T tokenVisitor, Collection<TokenVisitor> registerOnRemove,
-            boolean notifyLastToken) {
+            BooleanSupplier notifyLastToken) {
         decoratedTokenVisitor = tokenVisitor;
         this.registerOnRemove = registerOnRemove;
         this.notifyLastToken = notifyLastToken;
@@ -120,7 +125,7 @@ final class RegisterOnRemoveTokenVisitor<T extends TokenVisitor> implements Toke
         try {
             decoratedTokenVisitor.afterRemove(this);
             registerOnRemove.forEach(visitorRegistrar::addVisitor);
-            if (notifyLastToken && lastTokenSeen != DUMMY_NULL_TOKEN) {
+            if (lastTokenSeen != DUMMY_NULL_TOKEN && notifyLastToken.getAsBoolean()) {
                 registerOnRemove.forEach(visitor -> {
                     try {
                         // Notification is done with the real registrar

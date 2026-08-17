@@ -64,8 +64,8 @@ class RegisterOnRemoveTokenVisitorTest {
     @Test
     void selfRemoveDuringVisitToken_registersNewVisitors_tokenOnNewVisitors(@Mock Token token,
             @Mock TokenVisitor newVisitor2) {
-        var registerOnRemove =
-                new RegisterOnRemoveTokenVisitor<>(decoratedVisitor, List.of(newVisitor, newVisitor2), true);
+        var registerOnRemove = new RegisterOnRemoveTokenVisitor<>(decoratedVisitor, List.of(newVisitor, newVisitor2),
+                Boolean.TRUE::booleanValue);
         doAnswer(invocation -> {
             invocation.getArgument(1, VisitorRegistrar.class).removeVisitor(decoratedVisitor);
             return null;
@@ -91,8 +91,8 @@ class RegisterOnRemoveTokenVisitorTest {
     @Test
     void selfRemoveDuringVisitToken_registersNewVisitors_tokenOnNewVisitors_exceptionsIgnored(@Mock Token token,
             @Mock TokenVisitor newVisitor2) {
-        var registerOnRemove =
-                new RegisterOnRemoveTokenVisitor<>(decoratedVisitor, List.of(newVisitor, newVisitor2), true);
+        var registerOnRemove = new RegisterOnRemoveTokenVisitor<>(decoratedVisitor, List.of(newVisitor, newVisitor2),
+                Boolean.TRUE::booleanValue);
         doAnswer(invocation -> {
             invocation.getArgument(1, VisitorRegistrar.class).removeVisitor(decoratedVisitor);
             return null;
@@ -123,7 +123,8 @@ class RegisterOnRemoveTokenVisitorTest {
 
     @Test
     void registeringOtherVisitor_forwarded(@Mock Token token, @Mock TokenVisitor otherVisitor) {
-        var registerOnRemove = new RegisterOnRemoveTokenVisitor<>(decoratedVisitor, List.of(newVisitor), true);
+        var registerOnRemove = new RegisterOnRemoveTokenVisitor<>(decoratedVisitor, List.of(newVisitor),
+                Boolean.TRUE::booleanValue);
         doAnswer(invocation -> {
             invocation.getArgument(1, VisitorRegistrar.class).addVisitor(otherVisitor);
             return null;
@@ -137,7 +138,8 @@ class RegisterOnRemoveTokenVisitorTest {
 
     @Test
     void removeOtherVisitor_forwarded(@Mock Token token, @Mock TokenVisitor otherVisitor) {
-        var registerOnRemove = new RegisterOnRemoveTokenVisitor<>(decoratedVisitor, List.of(newVisitor), true);
+        var registerOnRemove = new RegisterOnRemoveTokenVisitor<>(decoratedVisitor, List.of(newVisitor),
+                Boolean.TRUE::booleanValue);
         doAnswer(invocation -> {
             invocation.getArgument(1, VisitorRegistrar.class).removeVisitor(otherVisitor);
             return null;

@@ -8,6 +8,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -23,14 +24,20 @@ class StatementDetectorTest {
 
     @Test
     void initialStatementType_typeUNKNOWN() {
-        detector = new StatementDetector();
         assertThat(detector.getStatementType()).describedAs("statementType").isEqualTo(LocalStatementType.UNKNOWN);
+    }
+
+    private SqlParser parserFor(String statementText) {
+        return SqlParser.withReservedWords(FirebirdReservedWords.latest())
+                .withVisitor(detector)
+                .of(statementText);
     }
 
     @ParameterizedTest
     @MethodSource("detectionCases")
     void testDetection(boolean detectReturning, String statement, LocalStatementType expectedType,
-            ObjectReference expectedTargetObject, boolean expectedReturningDetected, boolean expectedParserCompleted) {
+            ObjectReference expectedTargetObject, boolean expectedReturningDetected, boolean expectedParserCompleted,
+            List<ProcedureArgument> expectedProcedureArguments) {
         detector = new StatementDetector(detectReturning);
         SqlParser parser = parserFor(statement);
 
@@ -42,25 +49,27 @@ class StatementDetectorTest {
                 .describedAs("returningClauseDetected").isEqualTo(expectedReturningDetected);
         assertThat(parser.isCompleted())
                 .describedAs("parser completed").isEqualTo(expectedParserCompleted);
+        assertThat(detector.getProcedureArguments()).describedAs("procedureArguments")
+                .isEqualTo(expectedProcedureArguments);
     }
 
     static Stream<Arguments> detectionCases() {
         return Stream.of(
                 // SELECT
-                detectReturning("select * from RDB$DATABASE", LocalStatementType.SELECT, false),
-                noDetect("select * from RDB$DATABASE", LocalStatementType.SELECT, false),
-                                detectReturning("/* a comment */ select * from RDB$DATABASE", LocalStatementType.SELECT, false),
+                detectReturning("select * from RDB$DATABASE", LocalStatementType.SELECT),
+                noDetect("select * from RDB$DATABASE", LocalStatementType.SELECT),
+                detectReturning("/* a comment */ select * from RDB$DATABASE", LocalStatementType.SELECT),
                 // Presence of select as first keyword is sufficient
                 detectReturning("select", LocalStatementType.SELECT, true),
                 detectReturning("with a as (select 1 as col from rdb$database) select * from a",
-                        LocalStatementType.SELECT, false),
+                        LocalStatementType.SELECT),
                 // Presence of with as first keyword is sufficient
                 detectReturning("with", LocalStatementType.SELECT, true),
 
                 // SELECT: Parenthesized query expressions
-                detectReturning("(select * from RDB$DATABASE)", LocalStatementType.SELECT, false),
-                noDetect("(select * from RDB$DATABASE)", LocalStatementType.SELECT, false),
-                noDetect("((select * from RDB$DATABASE))", LocalStatementType.SELECT, false),
+                detectReturning("(select * from RDB$DATABASE)", LocalStatementType.SELECT),
+                noDetect("(select * from RDB$DATABASE)", LocalStatementType.SELECT),
+                noDetect("((select * from RDB$DATABASE))", LocalStatementType.SELECT),
                 // Presence of only the open parenthesis is sufficient
                 detectReturning("(", LocalStatementType.SELECT, true),
 
@@ -73,6 +82,9 @@ class StatementDetectorTest {
                         LocalStatementType.EXECUTE_PROCEDURE, ObjectReference.of("TEST"), false, true),
                 noDetect("execute procedure \"some_schema\".\"test\"",
                         LocalStatementType.EXECUTE_PROCEDURE, ObjectReference.of("some_schema", "test"), true),
+                // incomplete
+                noDetect("execute procedure", LocalStatementType.OTHER, true),
+                noDetect("execute procedure ", LocalStatementType.OTHER, true),
 
                 // DML
                 // insert
@@ -188,7 +200,7 @@ class StatementDetectorTest {
                 noDetect("rollback work", LocalStatementType.HARD_ROLLBACK, true),
                 noDetect("rollback retain", LocalStatementType.OTHER, true),
                 noDetect("rollback work retain", LocalStatementType.OTHER, true),
-                noDetect("rollback to savepoint 'XYZ'", LocalStatementType.OTHER, false),
+                noDetect("rollback to savepoint 'XYZ'", LocalStatementType.OTHER),
                 noDetect("rollback work to savepoint 'XYZ'", LocalStatementType.OTHER, false),
 
                 // SET TRANSACTION
@@ -199,12 +211,12 @@ class StatementDetectorTest {
                 noDetect("set transaction read write wait isolation level snapshot",
                         LocalStatementType.SET_TRANSACTION, false),
                 // We ignore everything after SET TRANSACTION, the server will do further parsing
-                noDetect("set transaction syntax error", LocalStatementType.SET_TRANSACTION, false),
+                noDetect("set transaction syntax error", LocalStatementType.SET_TRANSACTION),
 
                 // Other savepoint statements
-                noDetect("savepoint 'XYZ'", LocalStatementType.OTHER, false),
-                noDetect("release savepoint 'XYZ'", LocalStatementType.OTHER, false),
-                noDetect("release savepoint 'XYZ' only", LocalStatementType.OTHER, false),
+                noDetect("savepoint 'XYZ'", LocalStatementType.OTHER),
+                noDetect("release savepoint 'XYZ'", LocalStatementType.OTHER),
+                noDetect("release savepoint 'XYZ' only", LocalStatementType.OTHER),
 
                 // USING ... DO <statement>
                 noDetect("""
@@ -227,7 +239,7 @@ class StatementDetectorTest {
                         do
                         -- The main query
                         select subfunc(:p1) + o1 from subproc(:p2 + ?)""",
-                        LocalStatementType.SELECT, false),
+                        LocalStatementType.SELECT),
                 detectReturning("""
                         using (val integer = ?)
                         do insert into generic_table (col_a, col_b) values (:val, :val);""",
@@ -259,23 +271,29 @@ class StatementDetectorTest {
                           declare DO integer = 1;
                         do delete from "sometable" where x = do returning id""",
                         LocalStatementType.DELETE, ObjectReference.of("sometable"), true, true),
+                // Combined with call escape: not supported
+                noDetect("using (SOME_VALUE integer = ?) do {call someproc(:SOME_VALUE)}",
+                        LocalStatementType.JDBC_ESCAPE_AFTER_USING),
 
                 // JDBC call escape
-                // TODO Will need further refinement (e.g. whole statement will need to be consumed, at least until closing brace)
                 noDetect("{call someproc}", LocalStatementType.JDBC_CALL_ESCAPE, ObjectReference.of("SOMEPROC"), true),
-                noDetect("{call someproc", LocalStatementType.OTHER, true),
-                noDetect("{call someproc(param1, param2)}",
-                        LocalStatementType.JDBC_CALL_ESCAPE, ObjectReference.of("SOMEPROC"), false),
+                TestCaseBuilder.noDetect("{call someproc", LocalStatementType.OTHER).expectParserCompleted().build(),
+                TestCaseBuilder.noDetect("{call someproc(param1, param2)}", LocalStatementType.JDBC_CALL_ESCAPE)
+                        .expectTargetObject(ObjectReference.of("SOMEPROC"))
+                        .expectProcedureArguments(new ProcedureArgument.Expression("param1", 0),
+                                new ProcedureArgument.Expression(" param2", 0))
+                        .expectParserCompleted().build(),
                 noDetect("{?=call someproc}",
                         LocalStatementType.JDBC_CALL_RETURN_ESCAPE, ObjectReference.of("SOMEPROC"), true),
                 noDetect("{? = call someproc}",
                         LocalStatementType.JDBC_CALL_RETURN_ESCAPE, ObjectReference.of("SOMEPROC"), true),
-                noDetect("{? = call someproc(?)}",
-                        LocalStatementType.JDBC_CALL_RETURN_ESCAPE, ObjectReference.of("SOMEPROC"), false),
-                // TODO Should result in OTHER after refinement due to missing closing brace
+                TestCaseBuilder.noDetect("{? = call someproc(?)}", LocalStatementType.JDBC_CALL_RETURN_ESCAPE)
+                        .expectTargetObject(ObjectReference.of("SOMEPROC"))
+                        .expectProcedureArguments(new ProcedureArgument.PositionalParameter("?"))
+                        .expectParserCompleted().build(),
                 // NOTE: Missing closing brace
-                noDetect("{call someproc(param1, param2)",
-                        LocalStatementType.JDBC_CALL_ESCAPE, ObjectReference.of("SOMEPROC"), false),
+                noDetect("{call someproc(param1, param2)", LocalStatementType.OTHER, true),
+                noDetect("{?=call someproc(param1, param2)", LocalStatementType.OTHER, true),
 
                 // Firebird 6+ CALL
                 noDetect("call insert_customer('LECLERC', 'CHARLES', null, ?)",
@@ -288,67 +306,152 @@ class StatementDetectorTest {
                             id => ?)""", LocalStatementType.CALL, ObjectReference.of("INSERT_CUSTOMER"), false),
 
                 // invalid syntax
+                noDetect("insert from invalid", LocalStatementType.OTHER),
                 detectReturning("update or invalid", LocalStatementType.OTHER, true),
                 noDetect("update or invalid", LocalStatementType.OTHER, true),
                 detectReturning("update or insert invalid", LocalStatementType.OTHER, true),
-                detectReturning("delete sometable where x = y return column1", LocalStatementType.OTHER, false),
-                noDetect("delete sometable where x = y return column1", LocalStatementType.OTHER, false),
-                detectReturning("update and invalid", LocalStatementType.OTHER, false),
-                detectReturning("update sometable (invalid)", LocalStatementType.OTHER, false),
-                detectReturning("update sometable as as invalid", LocalStatementType.OTHER, false),
-                detectReturning("update or insert into default values", LocalStatementType.OTHER, false),
-                detectReturning("merge sometable invalid", LocalStatementType.OTHER, false),
+                detectReturning("delete sometable where x = y return column1", LocalStatementType.OTHER),
+                noDetect("delete sometable where x = y return column1", LocalStatementType.OTHER),
+                noDetect("delete into sometable", LocalStatementType.OTHER, false),
+                detectReturning("update and invalid", LocalStatementType.OTHER),
+                detectReturning("update sometable (invalid)", LocalStatementType.OTHER),
+                detectReturning("update sometable as as invalid", LocalStatementType.OTHER),
+                detectReturning("update or insert into default values", LocalStatementType.OTHER),
+                detectReturning("update or delete from something", LocalStatementType.OTHER),
+                detectReturning("merge sometable invalid", LocalStatementType.OTHER),
+                detectReturning("merge from sometable invalid", LocalStatementType.OTHER),
+                noDetect("execute procedure (SOMETHING)", LocalStatementType.OTHER),
 
                 // OTHER (cases include invalid statements)
                 detectReturning("execute block returns (id integer) as begin id = 1; suspend; end",
-                        LocalStatementType.OTHER, false),
+                        LocalStatementType.OTHER),
                 noDetect("execute block returns (id integer) as begin id = 1; suspend; end",
-                        LocalStatementType.OTHER, false),
-                detectReturning("alter session reset", LocalStatementType.OTHER, false),
-                detectReturning("create table test (col1 integer)", LocalStatementType.OTHER, false),
-                noDetect("set time zone 'UTC'", LocalStatementType.OTHER, false),
-                detectReturning("invalid tokens not recognized", LocalStatementType.OTHER, false),
-                noDetect("invalid tokens not recognized", LocalStatementType.OTHER, false),
-                noDetect("commit syntax error", LocalStatementType.OTHER, false),
+                        LocalStatementType.OTHER),
+                detectReturning("alter session reset", LocalStatementType.OTHER),
+                detectReturning("create table test (col1 integer)", LocalStatementType.OTHER),
+                noDetect("set time zone 'UTC'", LocalStatementType.OTHER),
+                noDetect("set something on", LocalStatementType.OTHER),
+                detectReturning("invalid tokens not recognized", LocalStatementType.OTHER),
+                noDetect("invalid tokens not recognized", LocalStatementType.OTHER),
+                noDetect("commit syntax error", LocalStatementType.OTHER),
                 noDetect("commit work work", LocalStatementType.OTHER, true),
-                noDetect("commit work syntax error", LocalStatementType.OTHER, false),
-                noDetect("rollback syntax error", LocalStatementType.OTHER, false),
+                noDetect("commit work syntax error", LocalStatementType.OTHER),
+                noDetect("rollback syntax error", LocalStatementType.OTHER),
                 noDetect("rollback work work", LocalStatementType.OTHER, true),
-                noDetect("rollback work syntax error", LocalStatementType.OTHER, false)
+                noDetect("rollback work syntax error", LocalStatementType.OTHER),
+                noDetect("{fn user()}", LocalStatementType.OTHER),
+                noDetect("{?>call someproc}", LocalStatementType.OTHER),
+                noDetect("{? NOT_EQUALS", LocalStatementType.OTHER, true),
+                noDetect("{?=NOT_CALL", LocalStatementType.OTHER, true),
+                noDetect("{call}", LocalStatementType.OTHER, true),
+                noDetect("{call someproc() NOT_A_CURLY_BRACE", LocalStatementType.OTHER, true),
+                noDetect("call ()", LocalStatementType.OTHER),
+                noDetect("execute block as begin end", LocalStatementType.OTHER),
+                noDetect("execute function XYZ()", LocalStatementType.OTHER)
         );
+    }
+
+    private static Arguments detectReturning(String statement, LocalStatementType expectedType) {
+        return TestCaseBuilder.detectReturning(statement, expectedType).build();
     }
 
     private static Arguments detectReturning(String statement, LocalStatementType expectedType,
             boolean expectedParserCompleted) {
-        return detectReturning(statement, expectedType, null, false, expectedParserCompleted);
+        return TestCaseBuilder.detectReturning(statement, expectedType)
+                .expectParserCompleted(expectedParserCompleted)
+                .build();
     }
 
     private static Arguments detectReturning(String statement, LocalStatementType expectedType,
             ObjectReference expectedTargetObject, boolean expectedReturningDetected, boolean expectedParserCompleted) {
-        return testCase(true, statement, expectedType, expectedTargetObject, expectedReturningDetected,
-                expectedParserCompleted);
+        return TestCaseBuilder.detectReturning(statement, expectedType)
+                .expectTargetObject(expectedTargetObject)
+                .expectReturningDetected(expectedReturningDetected)
+                .expectParserCompleted(expectedParserCompleted)
+                .build();
+    }
+
+    private static Arguments noDetect(String statement, LocalStatementType expectedType) {
+        return TestCaseBuilder.noDetect(statement, expectedType).build();
     }
 
     private static Arguments noDetect(String statement, LocalStatementType expectedType,
             boolean expectedParserCompleted) {
-        return noDetect(statement, expectedType, null, expectedParserCompleted);
+        return TestCaseBuilder.noDetect(statement, expectedType)
+                .expectParserCompleted(expectedParserCompleted)
+                .build();
     }
 
     private static Arguments noDetect(String statement, LocalStatementType expectedType,
             ObjectReference expectedTargetObject, boolean expectedParserCompleted) {
-        return testCase(false, statement, expectedType, expectedTargetObject, false, expectedParserCompleted);
+        return TestCaseBuilder.noDetect(statement, expectedType)
+                .expectTargetObject(expectedTargetObject)
+                .expectParserCompleted(expectedParserCompleted)
+                .build();
     }
 
-    private static Arguments testCase(boolean detectReturning, String statement, LocalStatementType expectedType,
-            ObjectReference expectedTargetObject, boolean expectedReturningDetected, boolean expectedParserCompleted) {
-        return arguments(detectReturning, statement, expectedType, expectedTargetObject, expectedReturningDetected,
-                expectedParserCompleted);
-    }
+    @SuppressWarnings("unused")
+    private static final class TestCaseBuilder {
 
-    private SqlParser parserFor(String statementText) {
-        return SqlParser.withReservedWords(FirebirdReservedWords.latest())
-                .withVisitor(detector)
-                .of(statementText);
+        private final boolean detectReturning;
+        private final String statement;
+        private final LocalStatementType expectedType;
+        private Object expectedTargetObject;
+        private boolean expectedReturningDetected;
+        private boolean expectedParserCompleted;
+        private List<ProcedureArgument> expectedProcedureArguments = List.of();
+
+        private TestCaseBuilder(boolean detectReturning, String statement, LocalStatementType expectedType) {
+            this.detectReturning = detectReturning;
+            this.statement = statement;
+            this.expectedType = expectedType;
+        }
+
+        static TestCaseBuilder noDetect(String statement, LocalStatementType expectedType) {
+            return new TestCaseBuilder(false, statement, expectedType);
+        }
+
+        static TestCaseBuilder detectReturning(String statement, LocalStatementType expectedType) {
+            return new TestCaseBuilder(true, statement, expectedType);
+        }
+
+        TestCaseBuilder expectReturningDetected(boolean expectedReturningDetected) {
+            this.expectedReturningDetected = expectedReturningDetected;
+            return this;
+        }
+
+        TestCaseBuilder expectReturningDetected() {
+            return expectReturningDetected(true);
+        }
+
+        TestCaseBuilder expectParserCompleted(boolean expectedParserCompleted) {
+            this.expectedParserCompleted = expectedParserCompleted;
+            return this;
+        }
+
+        TestCaseBuilder expectParserCompleted() {
+            return expectParserCompleted(true);
+        }
+
+        TestCaseBuilder expectTargetObject(ObjectReference expectedTargetObject) {
+            this.expectedTargetObject = expectedTargetObject;
+            return this;
+        }
+
+        TestCaseBuilder expectedProcedureArguments(List<ProcedureArgument> expectedProcedureArguments) {
+            this.expectedProcedureArguments = expectedProcedureArguments;
+            return this;
+        }
+
+        TestCaseBuilder expectProcedureArguments(ProcedureArgument... expectedProcedureArguments) {
+            return expectedProcedureArguments(List.of(expectedProcedureArguments));
+        }
+
+        private Arguments build() {
+            return arguments(detectReturning, statement, expectedType, expectedTargetObject, expectedReturningDetected,
+                    expectedParserCompleted, expectedProcedureArguments);
+        }
+
     }
 
 }
