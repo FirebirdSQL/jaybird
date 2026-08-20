@@ -216,7 +216,7 @@ maps to -10:00 in older Java versions
 maps to -07:00 in older Java versions
 --
 +
-This is informational only, and not something that we can fix or change in a later Jaybird release.
+This is not something that we can fix or change in a later Jaybird release.
 
 [#general-notes]
 == General Notes
