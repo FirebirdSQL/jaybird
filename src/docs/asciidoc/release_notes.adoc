@@ -61,7 +61,7 @@ Fix was contributed by Artyom Abakumov, and backport from Jaybird 6.0.6.
 * Dependency update: updated `net.java.dev.jna:jna` from 5.18.1 to 5.19.1 (used by `jaybird-native`) (issue:[952])
 * Made changes to address various potentially confusing warnings and errors logged during finalization (issue:[953])
 +
-Some of these changes are similar as already implemented in Jaybird 6 (but then using cleaners instead of finalizers).
+Some of these changes are similar as already implemented in Jaybird 6 (but still using finalizers).
 +
 ** Added `TransactionState.ABORTED_UNKNOWN`.
 +
@@ -381,7 +381,7 @@ maps to -10:00 in older Java versions
 maps to -07:00 in older Java versions
 --
 +
-This is informational only, and not something that we can fix or change in a later Jaybird release.
+This is not something that we can fix or change in a later Jaybird release.
 
 [#general-notes]
 == General Notes
@@ -1109,7 +1109,7 @@ For access through JDBC, this optimization has little to no effect, as one of th
 Direct use of `FirebirdBlob.BlobInputStream.length()` or the GDS-ng internal API may benefit from this change.
 We're also investigating further changes to the implementation of Jaybird that could benefit from this.
 
-This optimization is available for Firebird 2.1 and higher, but formally only supported for Firebird 3.0 and higher.
+This optimization is available for Firebird 2.1 and higher, but formally only supported for Firebird 2.5 and higher.
 
 For native connections, a similar optimization is available when using a Firebird 5.0.2 or higher fbclient, independent of the Jaybird version.
 
