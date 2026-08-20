@@ -8,11 +8,11 @@
 :toc: left
 :icons: font
 :jaybird6-full-version: 6.0.5
-:jaybird6-jna-version: 5.18.1
+:jaybird6-jna-version: 5.19.1
 :jaybird5-full-version: 5.0.12
 :jaybird5-template-version: {jaybird5-full-version}.<java>
 :jaybird5-example-version: {jaybird5-full-version}.java11
-:jaybird5-jna-version: 5.18.1
+:jaybird5-jna-version: 5.19.1
 :firebird-java: https://groups.google.com/g/firebird-java
 :issues: https://github.com/FirebirdSQL/jaybird/issues
 :jaybird-repo: https://github.com/FirebirdSQL/jaybird
