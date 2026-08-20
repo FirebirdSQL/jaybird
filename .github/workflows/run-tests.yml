@@ -9,7 +9,7 @@ jobs:
     strategy:
       matrix:
         buildProfile: [ 17 ]
-        testProfile: [ 17, 21, 25 ]
+        testProfile: [ 17, 21, 25, 26 ]
         firebird: [ '5.0.4' ]
         canFail: [ false ]
 #        include:
