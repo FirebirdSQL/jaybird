@@ -423,7 +423,7 @@ Feedback can be sent to the {firebird-java}[Firebird-java mailing list^] or repo
 [#supported-firebird-versions]
 === Supported Firebird versions
 
-Jaybird {version_wo_target} was tested against Firebird 2.5.9, Firebird 3.0.13, Firebird 4.0.6, and Firebird 5.0.3, but should also support other Firebird versions from 2.5 and up.
+Jaybird {version_wo_target} was tested against Firebird 2.5.9, Firebird 3.0.14, Firebird 4.0.7, and Firebird 5.0.4, but should also support other Firebird versions from 2.5 and up.
 
 Firebird 6.0 is currently not considered supported (see also <<firebird-support>> in <<whats-new-in-jaybird-5>>).
 
