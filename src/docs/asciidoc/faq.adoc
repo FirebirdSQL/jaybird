@@ -129,7 +129,7 @@ groupId:: `org.firebirdsql.jdbc`
 artifactId:: `jaybird`
 version:: `{jaybird5-template-version}` (where `<java>` is `java11` or `java8`)
 
-Contrary to Jaybird 4, a Maven relocation artifact with artifact id `jaybird-XX` (`jaybird-jdk17` for Java 7, `jaybird-jdk18` for Java 8) is no longer provided.
+Contrary to Jaybird 4, Maven relocation artifacts `jaybird-jdk17` for Java 7 and `jaybird-jdk18` for Java 8 are no longer provided.
 Please make sure you use the `jaybird` artifactId.
 
 For example, for Java 11:
@@ -222,7 +222,7 @@ If you want to use Type 2 support (native, local or embedded), you need to expli
 == Where can I get the sourcecode?
 
 All Jaybird <<where-do-i-get-jaybird,distribution ZIPs>> contain a `jaybird-<version>-sources.zip` with the sources used for that specific version.
-The Maven Central repository also has this `jaybird-<version>-sources.zip`, and your IDE will generally offer to download it for you if you navigate to any Jaybird class.
+The Maven Central repository also has this `jaybird-<version>-sources.zip`, and most IDEs usually offer to download it when you navigate to any Jaybird class.
 
 The full Jaybird sources, including the build files, are available from GitHub in the Jaybird repository, {jaybird-repo}.
 Each release is tagged in the repository.
@@ -423,13 +423,14 @@ Default URL format:
 
 [listing]
 ----
-jdbc:firebird://host[:port]/<database>
-jdbc:firebirdsql://host[:port]/<database>
+jdbc:firebird://[host[:port]]/<database>
+jdbc:firebirdsql://[host[:port]]/<database>
 ----
 
 This will connect to the database using the Type 4 JDBC driver using the Java implementation of the Firebird wire-protocol.
 This is best suited for client-server applications with dedicated database server.
-Port can be omitted (default value is `3050`), host name must be present.
+Port can be omitted (default value is `3050`).
+Host name can be omitted (default value is `localhost`.
 
 The `<host>` part is either the hostname, the IPv4 address, or the IPv6 address in brackets (eg `[::1]`).
 Use of IPv6 address literals is only supported with Firebird 3.0 or higher.
@@ -449,8 +450,8 @@ Deprecated, but still supported legacy URL format:
 
 [listing]
 ----
-jdbc:firebird:host[/port]:<database>
-jdbc:firebirdsql:host[/port]:<database>
+jdbc:firebird:[host[/port]:]<database>
+jdbc:firebirdsql:[host[/port]:]<database>
 ----
 
 The legacy URL format does not support IPv6 address literals.
@@ -463,8 +464,8 @@ To address some compatibility issues (and differences in interpretation of JDBC 
 
 [listing]
 ----
-jdbc:firebird:oo://host[:port]/<database>
-jdbc:firebirdsql:oo://host[:port]/<database>
+jdbc:firebird:oo://[host[:port]]/<database>
+jdbc:firebirdsql:oo://[host[:port]]/<database>
 ----
 
 [NOTE]
@@ -482,17 +483,19 @@ Default URL format:
 
 [listing]
 ----
-jdbc:firebird:native://host[:port]/<database>
-jdbc:firebirdsql:native://host[:port]/<database>
+jdbc:firebird:native://[host[:port]]/<database>
+jdbc:firebirdsql:native://[host[:port]]/<database>
 ----
 
 Legacy URL format:
 
 [listing]
 ----
-jdbc:firebird:native:host[/port]:<database>
-jdbc:firebirdsql:native:host[/port]:<database>
+jdbc:firebird:native:[host[/port]:]<database>
+jdbc:firebirdsql:native:[host[/port]:]<database>
 ----
+
+See also <<native-fbclient-connection-strings>>.
 
 Type 2 driver, will connect to the database using client library (`fbclient.dll` on Windows, and `libfbclient.so` on Linux).
 Requires correct installation of the client library and the JNA jar file.
@@ -502,6 +505,36 @@ Requires correct installation of the client library and the JNA jar file.
 As of Jaybird 5, the separate "`LOCAL`" protocol implementation has been removed.
 The JDBC URL sub-protocols `jdbc:firebird:local` and `jdbc:firebirdsql:local` are still supported but are now aliases for "```native```".
 ====
+
+[#native-fbclient-connection-strings]
+==== fbclient connection strings
+
+The above legacy URL format is a simplification.
+Since Jaybird 5, if the string after `jdbc:firebird:native:` does not start with `//`, it is forwarded to the client library for parsing.
+Valid connection strings -- including the "`legacy URL format`" -- are determined by the version of _fbclient_ that is loaded.
+
+In other words, the actual format is:
+
+[listing]
+----
+jdbc:firebird:native:<fbclient-connection-string>
+jdbc:firebirdsql:native:<fbclient-connection-string>
+
+<fbclient-connection-string>> ::=
+  !! Anything that does not start with '//' !!
+----
+
+Some examples that are also valid (assuming a Firebird 3.0 or higher `fbclient` is used):
+
+* `jdbc:firebird:native:inet://myserver//path/to/db.fdb`
+* `jdbc:firebird:native:inet4://myserver//path/to/db.fdb` -- Use IPv4 only
+* `jdbc:firebird:native:inet6://myserver//path/to/db.fdb` -- Use IPv6 only
+* `jdbc:firebird:native:xnet://C:\path\to\db.fdb` -- Windows only
+* `jdbc:firebird:native:wnet://C:\path\to\db.fdb` -- Windows only
+* `jdbc:firebird:native:wnet://myserver/C:\path\to\db.fdb` -- Windows only
+* `jdbc:firebird:native:wnet://myserver:fb_db/C:\path\to\db.fdb` -- Windows only
+
+NOTE: Support for the WNET protocol was removed in Firebird 5.0.
 
 [#embedded-server]
 === Embedded Server
