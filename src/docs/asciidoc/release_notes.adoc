@@ -8,7 +8,7 @@
 :toc: left
 :icons: font
 :sectnums:
-:bc-version: 1.84
+:bc-version: 1.85.2
 :jna-version: 5.19.1
 :jaybird-fbclient-version: 5.0.4.0
 :firebird-java: https://groups.google.com/g/firebird-java
@@ -36,7 +36,7 @@ For known issues, consult <<known-issues>>.
 
 === Jaybird 6.0.6
 
-The following was fixed or changed since Jaybird 6.0.6:
+The following was fixed or changed since Jaybird 6.0.5:
 
 * Two system properties were added to disable forced close of a connection after fatal errors (issue:[893])
 +
@@ -51,13 +51,13 @@ See also <<compat-legacy-auth>>.
 +
 Fix was contributed by Artyom Abakumov.
 * Fixed: `NullPointerException` on authentication failure with non-existent user and single plugin in `AuthServer` (issue:[940])
-* Dependency update: updated `org.bouncycastle:bcprov-jdk18on` from 1.83 to 1.84 (used by `chacha64-plugin`) (issue:[941])
 * Improvement: Support customization of service requests in service managers (issue:[946])
 * Dependency update: updated `net.java.dev.jna:jna-jpms` from 5.18.1 to 5.19.1 (used by `jaybird-native`) (issue:[951])
 * Added `TransactionState.ABORTED_UNKNOWN` (issue:[955])
 +
 This state is used when a commit, rollback, or prepare failed with an exception that Jaybird considers to indicate a broken connection.
 For end-users of Jaybird, this change has no real impact, except it may change the state logged for certain failures ending a transaction.
+* Dependency update: updated `org.bouncycastle:bcprov-jdk18on` from 1.83 to 1.85.2 (used by `chacha64-plugin`) (issue:[957])
 
 === Jaybird 6.0.5
 
