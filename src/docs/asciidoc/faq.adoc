@@ -129,7 +129,7 @@ groupId:: `org.firebirdsql.jdbc`
 artifactId:: `jaybird`
 version:: `{jaybird5-template-version}` (where `<java>` is `java11` or `java8`)
 
-Contrary to Jaybird 4, a Maven relocation artifact with artifact id `jaybird-XX` (with `XX` `jdk17`, `jdk18`) is no longer provided.
+Contrary to Jaybird 4, a Maven relocation artifact with artifact id `jaybird-XX` (`jaybird-jdk17` for Java 7, `jaybird-jdk18` for Java 8) is no longer provided.
 Please make sure you use the `jaybird` artifactId.
 
 For example, for Java 11:
@@ -636,7 +636,7 @@ You can check -- as `SYSDBA`, or with `RDB$ADMIN` in the security database -- wh
 
 With Firebird 3.0 and higher, this error can also be the result of using a case-sensitive username (i.e. the username was quoted, e.g. `CREATE USER "lowercaseuser" ...`).
 
-To login, you must surround the username with quotes so it's handled case-sensitive.
+To login, you must surround the username with double quotes so it's handled case-sensitive.
 In a Java string literal, that means using `"\"lowercaseuser\""` instead of `"lowercaseuser"`.
 
 [#error-isc-wirecrypt-incompatible]
@@ -715,7 +715,7 @@ Alternatively, it has been explicitly configured to apply the limited policy, or
 
 Solutions and workarounds:
 
-* Apply the unlimited Cryptographic Jurisdiction Policy, see https://stackoverflow.com/a/3864276/466862[this Stack Overflow answer]
+* Apply the unlimited Cryptographic Jurisdiction Policy, see https://stackoverflow.com/a/3864276/466862[this Stack Overflow answer^]
 * Relax your custom security policy to allow 160 bit keys for ARCFOUR
 * Disable wire encryption for Firebird by setting `WireCrypt = Disabled` in `firebird.conf`
 * Set `wireCrypt=DISABLED` in the connection properties
