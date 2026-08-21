@@ -58,6 +58,8 @@ Fix was contributed by Artyom Abakumov.
 This state is used when a commit, rollback, or prepare failed with an exception that Jaybird considers to indicate a broken connection.
 For end-users of Jaybird, this change has no real impact, except it may change the state logged for certain failures ending a transaction.
 * Dependency update: updated `org.bouncycastle:bcprov-jdk18on` from 1.83 to 1.85.2 (used by `chacha64-plugin`) (issue:[957])
+* The GPG key used to sign releases on Maven Central and GitHub was changed to key-id 373F 65A9 F373 1D5C (fingerprint 8372 B5DA 39C9 2FE1 DB4B BB62 373F 65A9 F373 1D5C).
+This is a 4096-bit key, where the previous one was 2048 bit.
 
 === Jaybird 6.0.5
 
