@@ -35,7 +35,7 @@ SPDX-License-Identifier: LicenseRef-PDL-1.0
 == What is Jaybird?
 
 Jaybird is a JDBC (Java DataBase Connectivity) driver for the https://firebirdsql.org[Firebird] SQL database management system.
-It is _the_ way to connect to Firebird from Java and any other Java Virtual Machine (JVM) based languages.
+It is _the_ way to connect to Firebird from Java and other Java Virtual Machine (JVM) based languages.
 
 [#covered-versions]
 == What Jaybird versions are covered by this FAQ?
@@ -63,7 +63,7 @@ The Jaybird GitHub Releases page is also an archive for all releases since JayBi
 [#maven]
 === Maven
 
-We recommend using your favourite build tool -- like Maven or Gradle -- to get Jaybird from Maven Central instead of downloading it manually from our site or GitHub.
+We recommend using your favourite build tool -- like https://maven.apache.org/[Maven^] or https://gradle.org/[Gradle^] -- to get Jaybird from Maven Central instead of downloading it manually from our site or GitHub.
 
 [#jaybird-6]
 ==== Jaybird 6
@@ -89,7 +89,7 @@ For example:
 </dependency>
 ----
 
-If you want to use Type 2 support (native or embedded), add `jaybird-native` as a dependency:
+If you want to use native or embedded (JDBC Type 2), add `jaybird-native` as a dependency:
 
 [source,xml,subs="verbatim,attributes"]
 ----
@@ -106,7 +106,7 @@ The `jaybird-native` dependency will automatically pull in `net.java.dev.jna:jna
 For Windows and Linux, you can add the https://github.com/mrotteveel/jaybird-fbclient[`org.firebirdsql.jdbc:fbclient`] dependency on your classpath to provide the native libraries for the `native` protocol.
 This dependency does *not* support Firebird embedded.
 
-To enable the "`ChaCha64`" wire encryption support for pure Java connections, add `chacha64-plugin` as a dependency:
+To enable "`ChaCha64`" wire encryption support for pure Java connections, add `chacha64-plugin` as a dependency:
 
 [source,xml,subs="verbatim,attributes"]
 ----
@@ -129,7 +129,7 @@ groupId:: `org.firebirdsql.jdbc`
 artifactId:: `jaybird`
 version:: `{jaybird5-template-version}` (where `<java>` is `java11` or `java8`)
 
-Contrary to Jaybird 4, Maven relocation artifacts `jaybird-jdk17` for Java 7 and `jaybird-jdk18` for Java 8 are no longer provided.
+Contrary to Jaybird 4, the Maven relocation artifacts `jaybird-jdk17` for Java 7 and `jaybird-jdk18` for Java 8 are no longer provided.
 Please make sure you use the `jaybird` artifactId.
 
 For example, for Java 11:
@@ -143,7 +143,7 @@ For example, for Java 11:
 </dependency>
 ----
 
-If you want to use Type 2 support (native or embedded), you need to explicitly include JNA {jaybird5-jna-version} as a dependency:
+If you want to use native or embedded (JDBC Type 2), you need to explicitly include JNA {jaybird5-jna-version} as a dependency:
 
 [source,xml,subs="verbatim,attributes"]
 ----
@@ -221,7 +221,7 @@ If you want to use Type 2 support (native, local or embedded), you need to expli
 [#where-can-i-get-the-sourcecode]
 == Where can I get the sourcecode?
 
-All Jaybird <<where-do-i-get-jaybird,distribution ZIPs>> contain a `jaybird-<version>-sources.zip` with the sources used for that specific version.
+All Jaybird <<where-do-i-get-jaybird,distribution ZIPs>> contain a `jaybird-<version>-sources.zip` with the Java sources used for that specific version.
 The Maven Central repository also has this `jaybird-<version>-sources.zip`, and most IDEs usually offer to download it when you navigate to any Jaybird class.
 
 The full Jaybird sources, including the build files, are available from GitHub in the Jaybird repository, {jaybird-repo}.
@@ -252,8 +252,7 @@ Future versions of Jaybird may specify a different version, or be released under
 [#which-java-versions-are-supported]
 == Which Java versions are supported?
 
-[#java-jaybird-6]
-[discrete]
+[discrete#java-jaybird-6]
 === Jaybird 6
 
 Support is limited to Java LTS releases starting with Java 17, and the latest Java release.
@@ -261,8 +260,7 @@ Currently, that means Jaybird 6 supports Java 17, Java 21, Java 25, and Java 26.
 
 Jaybird 6 is compiled targeting Java 17.
 
-[#java-jaybird-5]
-[discrete]
+[discrete#java-jaybird-5]
 === Jaybird 5
 
 Support is limited to Java LTS releases starting with Java 8, and the latest Java release.
@@ -305,8 +303,7 @@ To ensure a stable module name, Jaybird 5 and older, since versions 2.2.14 and 3
 [#which-firebird-versions-are-supported]
 == Which Firebird versions are supported?
 
-[#firebird-jaybird-6]
-[discrete]
+[discrete#firebird-jaybird-6]
 === Jaybird 6
 
 Jaybird 6 supports Firebird 3.0, Firebird 4.0, and Firebird 5.0.
@@ -323,8 +320,7 @@ We may delay support for Firebird 6.0 until Jaybird 7, or we may improve support
 By default, Jaybird 6 -- using the pure Java protocol -- will not connect to Firebird 2.5 and older.
 See <<connection-rejected-by-remote-interface-335544421>> for a workaround.
 
-[#firebird-jaybird-5]
-[discrete]
+[discrete#firebird-jaybird-5]
 === Jaybird 5
 
 Jaybird 5 supports Firebird 2.5, Firebird 3.0, Firebird 4.0, and Firebird 5.0.
@@ -428,7 +424,7 @@ jdbc:firebirdsql://[host[:port]]/<database>
 ----
 
 This will connect to the database using the Type 4 JDBC driver using the Java implementation of the Firebird wire-protocol.
-This is best suited for client-server applications with dedicated database server.
+This is best suited for client-server applications with a dedicated database server.
 Port can be omitted (default value is `3050`).
 Host name can be omitted (default value is `localhost`.
 
@@ -439,11 +435,11 @@ The `<database>` part should be replaced with the database alias or the path to 
 In general, it is advisable to use database aliases instead of the path of the database file as it hides implementation details like file locations and OS type.
 
 On Linux the root `/` should be included in the path.
-A database located on `/opt/firebird/db.fdb` should use (note the double slash after port!):
+A database located on `/opt/firebird/db.fdb` should use (note the double slash after the port!):
 
 [source]
 ----
-jdbc:firebird://host:port//opt/firebird/db.fdb
+jdbc:firebird://myserver:3050//opt/firebird/db.fdb
 ----
 
 Deprecated, but still supported legacy URL format:
@@ -509,7 +505,6 @@ The JDBC URL sub-protocols `jdbc:firebird:local` and `jdbc:firebirdsql:local` ar
 [#native-fbclient-connection-strings]
 ==== fbclient connection strings
 
-The above legacy URL format is a simplification.
 Since Jaybird 5, if the string after `jdbc:firebird:native:` does not start with `//`, it is forwarded to the client library for parsing.
 Valid connection strings -- including the "`legacy URL format`" -- are determined by the version of _fbclient_ that is loaded.
 
@@ -547,6 +542,17 @@ jdbc:firebirdsql:embedded:<database>
 
 Similar to the Firebird client library, however `fbembed.dll` on Windows and `libfbembed.so` on Linux are used, falling back to `fbclient.dll`/`libfbclient.so` under the assumption it provides Embedded functionality.
 Requires correctly installed and configured Firebird embedded library and the JNA jar file.
+
+[NOTE]
+====
+In practice, embedded connection strings accept the same <<native-fbclient-connection-strings>> as documented for _native_.
+
+The only real differences with _native_ are:
+
+. If a Firebird Embedded Provider library is on the classpath, it will try to load it
+. It will try to load _fbembed_ before _fbclient_
+. URLs starting with `//` are not parsed and forwarded to the native client as is
+====
 
 [#character-sets]
 == Character sets
