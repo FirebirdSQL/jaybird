@@ -8,7 +8,7 @@ Publishing
 To publish to Maven use
 
 ```
-./gradlew clean dist assemble publish -PbuildProfile={8|11} -PcentralPassword=<value>
+./gradlew clean assemble publish -PbuildProfile={8|11} -PcentralPassword=<value>
 ```
 
 This command will prompt for you GPG key password if it's not already cached in

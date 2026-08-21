@@ -219,6 +219,11 @@ tasks.register('dist', Zip) {
     }
 }
 
+tasks.named('assemble') {
+    dependsOn tasks.named('dist')
+    dependsOn tasks.named('signDist')
+}
+
 jar {
     manifest {
         attributes(
