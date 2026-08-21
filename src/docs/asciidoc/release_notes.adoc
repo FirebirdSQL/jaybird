@@ -82,6 +82,8 @@ This is not a clean close and may result in "`connection reset by peer`" errors 
 The close (e.g. by finalization) of the underlying socket is now considered sufficient.
 ** Finalization of `JnaDatabase` (native) now only performs a cancel with `fb_cancel_abort`.
 ** Finalization of `JnaStatement` (native) now only frees the connection handle.
+* The GPG key used to sign releases on Maven Central and GitHub was changed to key-id 373F 65A9 F373 1D5C (fingerprint 8372 B5DA 39C9 2FE1 DB4B BB62 373F 65A9 F373 1D5C).
+This is a 4096-bit key, where the previous one was 2048 bit.
 
 [#jaybird-5-0-12-changelog]
 === Jaybird 5.0.12
