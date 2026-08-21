@@ -58,7 +58,7 @@ This change was backported from Jaybird 6.0.6.
 +
 Fix was contributed by Artyom Abakumov, and backport from Jaybird 6.0.6.
 * Improvement: Support customization of service requests in service managers (issue:[947])
-* Dependency update: updated `net.java.dev.jna:jna` from 5.18.1 to 5.19.1 (used by `jaybird-native`) (issue:[952])
+* Dependency update: updated `net.java.dev.jna:jna` from 5.18.1 to 5.19.1 (used by native and embedded) (issue:[952])
 * Made changes to address various potentially confusing warnings and errors logged during finalization (issue:[953])
 +
 Some of these changes are similar as already implemented in Jaybird 6 (but still using finalizers).
