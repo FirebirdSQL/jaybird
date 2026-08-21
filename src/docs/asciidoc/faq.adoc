@@ -318,7 +318,7 @@ We may delay support for Firebird 6.0 until Jaybird 7, or we may improve support
 ====
 
 By default, Jaybird 6 -- using the pure Java protocol -- will not connect to Firebird 2.5 and older.
-See <<connection-rejected-by-remote-interface-335544421>> for a workaround.
+See <<error-isc-connect-reject>> for a workaround.
 
 [discrete#firebird-jaybird-5]
 === Jaybird 5
@@ -426,7 +426,7 @@ jdbc:firebirdsql://[host[:port]]/<database>
 This will connect to the database using the Type 4 JDBC driver using the Java implementation of the Firebird wire-protocol.
 This is best suited for client-server applications with a dedicated database server.
 Port can be omitted (default value is `3050`).
-Host name can be omitted (default value is `localhost`.
+Host name can be omitted (default value is `localhost`).
 
 The `<host>` part is either the hostname, the IPv4 address, or the IPv6 address in brackets (eg `[::1]`).
 Use of IPv6 address literals is only supported with Firebird 3.0 or higher.
@@ -437,7 +437,7 @@ In general, it is advisable to use database aliases instead of the path of the d
 On Linux the root `/` should be included in the path.
 A database located on `/opt/firebird/db.fdb` should use (note the double slash after the port!):
 
-[source]
+[listing]
 ----
 jdbc:firebird://myserver:3050//opt/firebird/db.fdb
 ----
@@ -706,7 +706,7 @@ Relax this setting (in `firebird.conf`) to `WireCrypt = Enabled`.
 
 See also https://github.com/FirebirdSQL/jaybird/wiki/Jaybird-and-Firebird-3[Jaybird Wiki -- Jaybird and Firebird 3].
 
-Make sure you check the other settings mentioned in that article, otherwise you'll get another error (<<error-occurred-during-login-please-check-server-firebird-log-for-details-335545106>>).
+Make sure you check the other settings mentioned in that article, otherwise you'll get another error (<<error-isc-login-error>>).
 
 [#cause-unsupported-protocol]
 ==== Cause: unsupported protocol version
@@ -802,6 +802,8 @@ Notable changes -- for Jaybird and Firebird -- are:
 * Introduction of new methods on `java.sql.Connection` -- `enquoteIdentifier`, `enquoteLiteral`, `enquoteNCharLiteral`, and `isSimpleIdentifier`
 * The JDBC escape to selectively disable escape processing ([.nowrap]`++{\ ... \}++`)
 
+The caveats for <<jdbc44-support,JDBC 4.4>> also apply to JDBC 4.5.
+
 [#how-much-of-jdbc-is-supported-by-jaybird]
 == How much of JDBC is supported by Jaybird?
 
@@ -864,7 +866,7 @@ The following methods are implemented, but do not work as expected:
 ** `get/setMaxFieldSize` -- Does nothing (support will be introduced in Jaybird 7)
 * `java.sql.PreparedStatement`
 ** `setObject(index,object,type)` -- This method is implemented but behaves as `setObject(index,object)`
-** `setObject(index,object,type,scaleOrLength)` -- This method is implemented ,but behaves as `setObject(index,object)`, except if `object` is a `Reader` or `InputStream`, then it is directed to the `setBinaryStream` or `setCharacterStream` method accepting a length.
+** `setObject(index,object,type,scaleOrLength)` -- This method is implemented but behaves as `setObject(index,object)`, except if `object` is a `Reader` or `InputStream`, then it is directed to the `setBinaryStream` or `setCharacterStream` method accepting a length.
 * `java.sql.CallableStatement`
 ** `getBigDecimal(index,scale)` -- This method is implemented but behaves as `getBigDecimal(index)`.
 The method is deprecated, and we suggest using `getBigDecimal(index)` and adjust the scale of the returned `BigDecimal` using `BigDecimal.setScale(newScale,roundingMode)`
