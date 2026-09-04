@@ -1857,6 +1857,38 @@ class FBResultSetTest {
         }
     }
 
+    /**
+     * Rationale: see <a href="https://github.com/FirebirdSQL/jaybird/issues/961">#961</a>.
+     */
+    @Test
+    void rollbackOnIncompleteFetch_shouldNotThrowException() throws Exception {
+        final int rowCount = 1000;
+        final int endOnRow = 789;
+        try (var connection = getConnectionViaDriverManager();
+             var stmt = connection.createStatement()) {
+            connection.setAutoCommit(false);
+            stmt.execute("""
+                create table TEST_TABLE (
+                  ID integer not null,
+                  STR varchar(100) character set UTF8
+                )""");
+            stmt.execute("create index IDX_TEST_TABLE_STR on TEST_TABLE (STR)");
+            connection.commit();
+            createTestData(rowCount, connection);
+            connection.commit();
+            try (var rs = stmt.executeQuery("select ID, STR from TEST_TABLE order by STR")) {
+                int count = 0;
+                while (count < endOnRow && rs.next()) {
+                    count++;
+                }
+            }
+            // The original issue was caused by the statement close (specifically, clearing its row descriptor)
+            stmt.close();
+            // Any action that triggers a network read produced the error of the original issue
+            connection.rollback();
+        }
+    }
+
     @ParameterizedTest
     @CsvSource(useHeadersInDisplayName = true, textBlock = """
             maxFieldSize, valueSize
