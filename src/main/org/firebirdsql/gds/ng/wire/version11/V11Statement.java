@@ -38,6 +38,8 @@ import java.io.OutputStream;
 import java.sql.SQLException;
 import java.util.Optional;
 
+import static java.lang.System.Logger.Level.ERROR;
+
 /**
  * {@link org.firebirdsql.gds.ng.wire.FbWireStatement} implementation for the version 11 wire protocol.
  *
@@ -118,7 +120,8 @@ public class V11Statement extends V10Statement {
 
     @Override
     public void fetchRows(int fetchSize) throws SQLException {
-        try (LockCloseable ignored = withLock()) {
+        try (var ignored = withLock()) {
+            checkStatementValid();
             if (!completeAsyncFetch()) {
                 super.fetchRows(fetchSize);
             }
@@ -221,8 +224,7 @@ public class V11Statement extends V10Statement {
      * @since 6
      */
     protected boolean completeAsyncFetch() throws SQLException {
-        try (LockCloseable ignored = withLock()) {
-            checkStatementValid();
+        try (var ignored = withLock()) {
             if (!asyncFetchStatus.isPending()) return false;
             try {
                 // Throw exception from previously unsuccessfully completed async fetch
@@ -248,7 +250,14 @@ public class V11Statement extends V10Statement {
 
     @Override
     protected void free(final int option) throws SQLException {
-        try (LockCloseable ignored = withLock()) {
+        try (var ignored = withLock()) {
+            try {
+                // Any pending async fetched rows (or exceptions) need to be read now (especially for DSQL_drop)
+                // See also https://github.com/FirebirdSQL/jaybird/issues/961
+                completeAsyncFetch();
+            } catch (Exception e) {
+                System.getLogger(getClass().getName()).log(ERROR, "completeAsyncFetch in free threw exception", e);
+            }
             try {
                 doFreePacket(option);
                 // Don't flush close of cursor, only flush drop or unprepare of statement. This balances network

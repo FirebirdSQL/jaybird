@@ -34,6 +34,12 @@ Changes per Jaybird 6 release.
 See also <<whats-new-in-jaybird-6>>.
 For known issues, consult <<known-issues>>.
 
+=== Jaybird 6.0.7
+
+The following was fixed or changed since Jaybird 6.0.6:
+
+* Fixed: Statement close with a pending async fetch results in a broken connection (issue:[961])
+
 === Jaybird 6.0.6
 
 The following was fixed or changed since Jaybird 6.0.5:
