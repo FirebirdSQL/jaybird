@@ -30,7 +30,7 @@ endif::[]
 [#jaybird-6-0-x-changelog]
 == Jaybird 6.0.x changelog
 
-Changes per Jaybird 6 release.
+Changes per Jaybird 6 maintenance release.
 See also <<whats-new-in-jaybird-6>>.
 For known issues, consult <<known-issues>>.
 
@@ -297,7 +297,7 @@ Jaybird 6 supports Java 17 and higher (JDBC 4.3/JDBC 4.4/JDBC 4.5).
 Support for earlier Java versions has been dropped.
 
 We limit support to Java LTS releases starting with Java 17, and the latest Java release.
-For Jaybird {version_wo_target} that means we support Java 17, Java 21, Java 25, and Java 26.
+For Jaybird {version_wo_target} that means we support Java 17, Java 21, Java 25, and Java 27.
 
 [NOTE]
 ====
@@ -989,7 +989,7 @@ Maximum size in bytes of the blob (default: `65535`). +
 A value of `0` will disable sending of inline blobs.
 +
 The maximum value is decided by the Firebird server, and is currently `65535`;
-this may change in the future
+this may change in the future.
 +
 If a blob is smaller than the specified size, the server will send it inline.
 The size includes segment lengths, so the actual maximum blob data received is `_N_ * 2` bytes smaller, where _N_ is the number of segments of the actual blob.
@@ -1285,7 +1285,7 @@ the previous implementation queried `USER_TRANSACTION`, and if not set, fell bac
 To retrieve from `USER_TRANSACTION` in the new implementation, use `<name>@USER_TRANSACTION`.
 * `Connection.setClientInfo(Properties)` now clears known properties not included in the `Properties` object;
 the previous implementation only _set_ the included properties.
-* Successful _get_ or _set_ of a property registers it as known property of the connection and influences behaviour of subsequent calls to `getClientInfo()` and `setClientInfo(Properties)` on that connection
+* Successful _get_ or _set_ of a property registers it as a known property of the connection and influences behaviour of subsequent calls to `getClientInfo()` and `setClientInfo(Properties)` on that connection
 * `DatabaseMetaData.getClientInfoProperties` now reports the JDBC-specified properties, and nothing else;
 the previous implementation always returned an empty result set.
 
