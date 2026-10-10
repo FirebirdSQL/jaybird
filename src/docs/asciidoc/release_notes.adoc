@@ -8,7 +8,7 @@
 :toc: left
 :icons: font
 :sectnums:
-:bc-version: 1.85.2
+:bc-version: 1.86
 :jna-version: 5.19.1
 :jaybird-fbclient-version: 5.0.4.0
 :firebird-java: https://groups.google.com/g/firebird-java
@@ -39,6 +39,7 @@ For known issues, consult <<known-issues>>.
 The following was fixed or changed since Jaybird 6.0.6:
 
 * Fixed: Statement close with a pending async fetch results in a broken connection (issue:[961])
+* Dependency update: updated `org.bouncycastle:bcprov-jdk18on` from 1.85.2 to 1.86 (used by `chacha64-plugin`) (issue:[962])
 
 === Jaybird 6.0.6
 
