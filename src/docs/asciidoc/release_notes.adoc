@@ -29,7 +29,7 @@ endif::[]
 [#jaybird-5-0-x-changelog]
 == Jaybird 5.0.x changelog
 
-Changes per Jaybird 5 release.
+Changes per Jaybird 5 maintenance release.
 See also <<whats-new-in-jaybird-5>>.
 For known issues, consult <<known-issues>>.
 
