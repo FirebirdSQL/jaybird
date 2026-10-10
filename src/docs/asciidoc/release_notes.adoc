@@ -39,11 +39,11 @@ endif::[]
 [#jaybird-7-0-x-changelog]
 == Jaybird 7.0.x changelog
 
-Changes per Jaybird 7 release.
+Changes per Jaybird 7 maintenance release.
 See also <<whats-new-in-jaybird-7>>.
 For known issues, consult <<known-issues>>.
 
-...
+(No maintenance release yet.)
 
 [#known-issues]
 == Known issues
