@@ -51,7 +51,7 @@ The distribution ZIPs as available from {jaybird-repo}/releases[Jaybird GitHub R
 You can find the latest Jaybird releases on:
 
 [#download]
-* https://firebirdsql.org/en/jdbc-driver/[Firebird website: Firebird Type 4 JDBC Driver Downloads]
+* https://firebirdsql.org/en/jdbc-driver/[Firebird website: Firebird JDBC Driver Downloads]
 * {jaybird-repo}/releases[Jaybird GitHub Releases]
 +
 The Jaybird GitHub Releases page is also an archive for all releases since JayBird _[sic]_ 1.0-beta-1.
