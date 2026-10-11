@@ -7,7 +7,7 @@
 :source-highlighter: prettify
 :toc: left
 :icons: font
-:jaybird6-full-version: 6.0.6
+:jaybird6-full-version: 6.0.7
 :jaybird6-jna-version: 5.19.1
 :jaybird5-full-version: 5.0.13
 :jaybird5-template-version: {jaybird5-full-version}.<java>
@@ -16,7 +16,7 @@
 :firebird-java: https://groups.google.com/g/firebird-java
 :issues: https://github.com/FirebirdSQL/jaybird/issues
 :jaybird-repo: https://github.com/FirebirdSQL/jaybird
-:firebird-conf-ref: https://firebirdsql.org/docs/chunk/en/refdocs/fbconf/fbconf-firebird.html
+:firebird-conf-ref: https://firebirdsql.org/docs/html/en/refdocs/fbconf/firebird-configuration-reference.html
 :jaybird-manual: https://firebirdsql.github.io/jaybird-manual/jaybird_manual.html
 :sectnums:
 :fb-canonical-html: https://firebirdsql.org/docs/drivers/java/faq.html
@@ -43,7 +43,7 @@ It is _the_ way to connect to Firebird from Java and other Java Virtual Machine 
 This FAQ covers Jaybird 5 and higher.
 
 Older versions are not covered, as they are no longer supported.
-The distribution ZIPs of older versions, as available from {jaybird-repo}/releases[Jaybird GitHub Releases], contains an FAQ and release notes with information for that version.
+The distribution ZIPs as available from {jaybird-repo}/releases[Jaybird GitHub Releases], contain an FAQ and release notes with information for that version.
 
 [#where-do-i-get-jaybird]
 == Where do I get Jaybird?
@@ -256,7 +256,7 @@ Future versions of Jaybird may specify a different version, or be released under
 === Jaybird 6
 
 Support is limited to Java LTS releases starting with Java 17, and the latest Java release.
-Currently, that means Jaybird 6 supports Java 17, Java 21, Java 25, and Java 26.
+Jaybird {jaybird6-full-version} supports Java 17, Java 21, Java 25, and Java 27.
 
 Jaybird 6 is compiled targeting Java 17.
 
@@ -264,7 +264,9 @@ Jaybird 6 is compiled targeting Java 17.
 === Jaybird 5
 
 Support is limited to Java LTS releases starting with Java 8, and the latest Java release.
-Currently, that means Jaybird 5 supports Java 8, Java 11, Java 17, Java 21, Java 25, and Java 26.
+Jaybird {jaybird5-full-version} supports Java 8, Java 11, Java 17, Java 21, Java 25, and Java 26.
+
+If you use Java 17 or higher, we recommend using Jaybird 6.
 
 Jaybird 5 is compiled targeting Java 8 (version format `5.0.x.java8`) and Java 11 (version format `5.0.x.java11`).
 We recommend using the Java 11 build on Java 11 and higher.
@@ -654,7 +656,7 @@ On the other hand, this has the benefit that this works for all Jaybird versions
 == Common connection errors
 
 [#error-isc-login]
-=== Your user name and password are not defined. Ask your database administrator to set up a Firebird login. (335544472) [[your-user-name-and-password-are-not-defined-ask-your-database-administrator-to-set-up-a-firebird-login.-335544472]] [
+=== Your user name and password are not defined. Ask your database administrator to set up a Firebird login. (335544472) [[your-user-name-and-password-are-not-defined-ask-your-database-administrator-to-set-up-a-firebird-login.-335544472]]
 
 This error means that the user does not exist, or that the specified password is not correct.
 
@@ -666,7 +668,7 @@ When connecting to Firebird 3.0 and higher, this error can also mean that the us
 The list of authentication plugins tried is the conjunction of the plugins offered by the client (connection property {jaybird-manual}#ref-auth-plugins-config[`authPlugins`]) and the {firebird-conf-ref}#fbconf-auth-server[`AuthServer`] setting in _firebird.conf_.
 
 For example, Jaybird -- by default -- only connects using the _Srp256_ and _Srp_ authentication plugins, which means only users created with the _Srp_ user manager can be authenticated, and users created with _Legacy_UserManager_ cannot be authenticated.
-The recommended solution is to create the user for the _Srp_ user manager (e.g. see https://firebirdsql.org/file/documentation/chunk/en/refdocs/fblangref50/fblangref50-security-user.html#fblangref50-security-user-create[Firebird 5.0 `CREATE USER`^], specifically the `USING PLUGIN ...` clause).
+The recommended solution is to create the user for the _Srp_ user manager (e.g. see https://firebirdsql.org/file/documentation/chunk/en/refdocs/fblangref50/fblangref50-security-user.html#fblangref50-security-user-create[`CREATE USER`^], specifically the `USING PLUGIN ...` clause).
 Alternatively, you can set connection property `authPlugins` to `Srp256,Srp,Legacy_Auth` to also try legacy authentication, see also {jaybird-manual}#ref-auth-plugins[Authentication plugins] in the Jaybird manual.
 
 You can check -- as `SYSDBA`, or with `RDB$ADMIN` in the security database -- what user manager(s) were used to create a user in the `SEC$USERS` virtual table.
@@ -682,7 +684,7 @@ In a Java string literal, that means using `"\"lowercaseuser\""` instead of `"lo
 === Incompatible wire encryption levels requested on client and server (335545064) [[incompatible-wire-encryption-levels-requested-on-client-and-server-335545064]]
 
 This error means that you have requested a connection with a mismatch in encryption settings.
-For example, you specified connection property {jaybird-manual}#ref-wirecrypt[`wireCrypt=required`] while Firebird is set to `WireCrypt = Disabled` (or vice versa).
+For example, you specified connection property {jaybird-manual}#ref-wirecrypt[`wireCrypt=required`] while Firebird is set to {firebird-conf-ref}#fbconf-wire-crypt[`WireCrypt = Disabled`] (or vice versa).
 
 [#error-isc-connect-reject]
 === connection rejected by remote interface (335544421) [[connection-rejected-by-remote-interface-335544421]]
@@ -695,7 +697,7 @@ It can have other causes than described below.
 
 With -- no longer supported -- Jaybird 3 and Jaybird 4 connecting to Firebird 3.0 or higher, leaving username or password null will lead to Jaybird not trying any authentication plugin, and as a result Firebird will reject the connection.
 
-In supported Jaybird versions, this situation will yield error "`Your user name and password are not defined. Ask your database administrator to set up a Firebird login.`"
+In Jaybird 5 and higher, this will yield error "`Your user name and password are not defined. Ask your database administrator to set up a Firebird login.`"
 
 [#cause-wirecrypt-required]
 ==== Cause: wirecrypt required
@@ -755,9 +757,11 @@ Alternatively, it has been explicitly configured to apply the limited policy, or
 Solutions and workarounds:
 
 * Apply the unlimited Cryptographic Jurisdiction Policy, see https://stackoverflow.com/a/3864276/466862[this Stack Overflow answer^]
-* Relax your custom security policy to allow 160 bit keys for ARCFOUR
+* Change your custom security policy to allow 160-bit keys for ARCFOUR
 * Disable wire encryption for Firebird by setting `WireCrypt = Disabled` in `firebird.conf`
 * Set `wireCrypt=DISABLED` in the connection properties
+
+Similar errors are possible for the `ChaCha` and `ChaCha64` wire encryption.
 
 [#jdbc-support]
 = JDBC Support
