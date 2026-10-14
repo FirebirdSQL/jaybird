@@ -4,7 +4,7 @@
 jna = "5.19.1"
 jakarta-servlet = "5.0.0"
 bouncy-castle = "1.86"
-jspecify = "1.0.0"
+jspecify = "1.0.1"
 asciidoctor-jvm = "4.0.5"
 javaagent-gradle-plugin = "0.12.2"
 fb-asciidoc-ext = "1.1"

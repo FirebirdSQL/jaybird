@@ -38,7 +38,7 @@ For known issues, consult <<known-issues>>.
 
 The following was fixed or changed since Jaybird 6.0.7:
 
-* ...
+* Dependency update: updated `org.jspecify:jspecify` from 1.0.0 to 1.0.1 (issue:[964])
 
 === Jaybird 6.0.7
 
