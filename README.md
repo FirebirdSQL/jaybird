@@ -8,6 +8,45 @@ Jaybird is a JDBC driver suite to connect to Firebird database servers.
 [![Build Status](https://github.com/FirebirdSQL/jaybird/actions/workflows/run-tests.yml/badge.svg?branch=master)](https://github.com/FirebirdSQL/jaybird/actions?query=branch%3Amaster+workflow%3Arun-tests)
 [![MavenCentral](https://maven-badges.sml.io/sonatype-central/org.firebirdsql.jdbc/jaybird/badge.svg)](https://maven-badges.sml.io/sonatype-central/org.firebirdsql.jdbc/jaybird/)
 
+## Getting Jaybird
+
+A distribution zip is available from [releases](https://github.com/FirebirdSQL/jaybird/releases) and the Firebird website: <https://firebirdsql.org/en/jdbc-driver/>.
+
+Jaybird is also available from [Maven Central](https://central.sonatype.com/artifact/org.firebirdsql.jdbc/jaybird):
+
+For example:
+
+```xml
+<dependency>
+    <groupId>org.firebirdsql.jdbc</groupId>
+    <artifactId>jaybird</artifactId>
+    <version>6.0.7</version>
+</dependency>
+```
+
+If you want to use native or embedded (JDBC Type 2), add `jaybird-native` as a dependency:
+
+```xml
+<dependency>
+    <groupId>org.firebirdsql.jdbc</groupId>
+    <artifactId>jaybird-native</artifactId>
+    <version>6.0.7</version>
+</dependency>
+```
+
+For Windows, Linux, and macOS, you can add the [`org.firebirdsql.jdbc:fbclient`](https://github.com/mrotteveel/jaybird-fbclient) dependency on your classpath to provide the native libraries for the `native` protocol.
+This dependency does *not* support Firebird embedded.
+
+To enable "`ChaCha64`" wire encryption support for pure Java connections, add `chacha64-plugin` as a dependency:
+
+```xml
+<dependency>
+    <groupId>org.firebirdsql.jdbc</groupId>
+    <artifactId>chacha64-plugin</artifactId>
+    <version>6.0.7</version>
+</dependency>
+```
+
 ## Reporting bugs or improvements
 
 For security vulnerabilities, see [Security Policy](https://github.com/FirebirdSQL/jaybird/security/policy).
@@ -18,10 +57,10 @@ For bugs or improvement, go to our [Issue tracker](https://github.com/FirebirdSQ
 
 - [Downloads](https://www.firebirdsql.org/en/jdbc-driver/)
 - [Jaybird JDBC Driver Java Programmer’s Manual](https://firebirdsql.github.io/jaybird-manual/jaybird_manual.html)
+- [Release notes](src/docs/asciidoc/release_notes.adoc)
 - [Issue tracker](https://github.com/FirebirdSQL/jaybird/issues/)
 - [Wiki](https://github.com/FirebirdSQL/jaybird/wiki)
 - [FAQ](src/docs/asciidoc/faq.adoc)
-- [Release notes](src/docs/asciidoc/release_notes.adoc)
 - [How to contribute](CONTRIBUTING.md)
 
 ## License
