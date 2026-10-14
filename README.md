@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: Copyright 2015-2024 Mark Rotteveel
+SPDX-FileCopyrightText: Copyright 2015-2026 Mark Rotteveel
 SPDX-License-Identifier: LicenseRef-PDL-1.0
 -->
 # Jaybird
@@ -37,7 +37,7 @@ If you want to use native or embedded (JDBC Type 2), add `jaybird-native` as a d
 For Windows, Linux, and macOS, you can add the [`org.firebirdsql.jdbc:fbclient`](https://github.com/mrotteveel/jaybird-fbclient) dependency on your classpath to provide the native libraries for the `native` protocol.
 This dependency does *not* support Firebird embedded.
 
-To enable "`ChaCha64`" wire encryption support for pure Java connections, add `chacha64-plugin` as a dependency:
+To enable *ChaCha64* wire encryption support for pure Java connections, add `chacha64-plugin` as a dependency:
 
 ```xml
 <dependency>
@@ -87,7 +87,7 @@ comply with the terms of this License. A copy of the License is available at
 <https://firebirdsql.org/en/public-documentation-license/>.
 
 The Original Documentation is "Jaybird" (README.md). The Initial Writer of 
-the Original Documentation is Mark Rotteveel, Copyright © 2015-2024. All Rights
+the Original Documentation is Mark Rotteveel, Copyright © 2015-2026. All Rights
 Reserved. (Initial Writer contact(s): mark (at) lawinegevaar (dot) nl).
 
 <!--
