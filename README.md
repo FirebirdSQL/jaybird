@@ -3,7 +3,7 @@ SPDX-FileCopyrightText: Copyright 2015-2026 Mark Rotteveel
 SPDX-License-Identifier: LicenseRef-PDL-1.0
 -->
 # Jaybird
-Jaybird is a JDBC driver suite to connect to Firebird database servers.
+Jaybird is a JDBC driver suite to connect to [Firebird](https://firebirdsql.org/) database servers.
 
 [![Build Status](https://github.com/FirebirdSQL/jaybird/actions/workflows/run-tests.yml/badge.svg?branch=master)](https://github.com/FirebirdSQL/jaybird/actions?query=branch%3Amaster+workflow%3Arun-tests)
 [![MavenCentral](https://maven-badges.sml.io/sonatype-central/org.firebirdsql.jdbc/jaybird/badge.svg)](https://maven-badges.sml.io/sonatype-central/org.firebirdsql.jdbc/jaybird/)
