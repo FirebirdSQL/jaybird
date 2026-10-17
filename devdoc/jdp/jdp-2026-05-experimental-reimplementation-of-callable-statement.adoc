@@ -1,0 +1,109 @@
+= jdp-2026-05: Experimental reimplementation of CallableStatement
+
+// SPDX-FileCopyrightText: Copyright 2024-2026 Mark Rotteveel
+// SPDX-License-Identifier: LicenseRef-PDL-1.0
+
+== Status
+
+* Draft
+* Proposed for: Jaybird 7
+
+== Type
+
+* Feature-Specification
+
+== Context
+
+Jaybird's implementation of `java.sql.CallableStatement` works -- considering Jaybird 5 and older, but has a number of oddities and outright bugs that surface if you attempt to use it in a way we didn't intend or expect.
+
+Some examples (not exhaustive):
+
+* It is possible to use the `CallableStatement#registerOutParameter` methods for a "`selectable`" stored procedure, while formally it is a result set producing procedure, and thus has no output parameters.
+* Similarly, the rows produced by a "`selectable`" stored procedure can be accessed by `CallableStatement.getXXX` methods.
++
+It's even possible to iterate using the result set, and then access the current row through the `CallableStatement`.
+* Calling `CallableStatement.getXXX` with an index that is not mapped to an out parameter falls back to trying that index directly on the underlying result set.
+* Calling `CallableStatement.setXXX` with an index that is mapped to an out parameter, may be passed to the procedure anyway, potentially overwriting a literal parameter value or addressing an optional parameter.
+
+Previous attempts to address some of these issues, uncovered other problems or could lead to potential compatibility issues, which forced us to roll back to the original implementation.
+
+== Decision
+
+We'll reimplement `java.sql.CallableStatement`.
+This second implementation will live next to the old implementation, and can be enabled with a connection property (see <<consequences>>) in Jaybird 7 for evaluation.
+The second implementation will initially be experimental in Jaybird 7, but could be declared stable in a later maintenance release of Jaybird 7.
+
+In Jaybird 8, or possibly later, it'll become the default, but the old implementation can still be enabled.
+Eventually, the old implementation may be removed.
+This will happen at least one version after the new one becomes the default.
+
+The exact feature set of the new implementation may be subject to further JDPs, but at least the following will be done:
+
+* Only the JDBC call-escape will be transformed to selectable (`SELECT ... FROM <some-procedure>`) or executable procedure (`EXECUTE PROCEDURE <some-procedure>`).
+** `SELECT ... FROM <some-procedure>` will *never* be transformed to `EXECUTE PROCEDURE <some-procedure>` or `CALL <some-procedure>`.
+** `EXECUTE PROCEDURE <some-procedure>` will *never* be transformed to `SELECT * FROM <some-procedure>` or `CALL <some-procedure>`.
+** Firebird 6+ `CALL <some-procedure>` will *never* be transformed to `EXECUTE PROCEDURE <some-procedure>` nor `SELECT * FROM <some-procedure>`.
+* (_tentative_) Any other statement type will be executable as if it is a `PreparedStatement`.
++
+This is tentative, as we'll need to double-check how this meshes with other requirements for `CallableStatement`.
+* (_tentative_) Revise stored procedure `DatabaseMetaData` information reported for input and output parameters/result set.
++
+This will likely be subject to a further JDP.
+* The JDBC escape `++{?=CALL <proc> (...)}++` will only be allowed for stored procedures with a single OUT parameter, and even then use of `++{CALL <proc> (..., ?)}++` is recommended and preferred.
+* Mixing input and output parameters will not be supported for the JDBC call escape and `EXECUTE PROCEDURE`.
++
+Given this is a breaking change, we will evaluate if this is the right way to go, and maybe add support for mixing in later.
++
+** No IN/OUT mapping (treating a parameter both as input and output parameter)
+** No interleaving IN parameters and OUT parameters.
++
+Either all IN comes first, followed by all OUT, except for a single output parameter executable procedures iff used with escape `++{?=CALL ...}++` (then first one OUT, then all IN).
+* No output parameter mapping for selectable stored procedures.
+
+We recognize that some of these are breaking changes compared to the current implementation.
+We think this will avoid some of the complexity and hidden bugs in the current implementation, and make it more straightforward to use.
+However, we will evaluate during development -- and after release of the experimental version in Jaybird 7 -- if we should reintroduce some of those options.
+
+[#consequences]
+== Consequences
+
+Jaybird 7 will add a new callable statement implementation, tentatively named `FBCallableStatementV2`.
+The original implementation, `FBCallableStatement` will remain the default in Jaybird 7.
+
+A new connection property `callableImplementation` will be added with the following values (case-insensitive):
+
+[horizontal.compact]
+`V1`::
+Use original implementation, `FBCallableStatement`
+`V2`::
+Use new -- experimental -- implementation, `FBCallableStatementV2`, and other associated changes (like `DatabaseMetaData` information)
+
+A system property, `org.firebirdsql.jdbc.callableImplementation` will be added to configure a global default.
+This will be checked at time of configuration creation.
+
+* With Jaybird 7, the default is `V1`.
+* With Jaybird 8, the default will change to `V2`;
+it will then no longer be experimental
+* With Jaybird 9 at the earliest, `V1` will be removed.
+
+[appendix]
+== License Notice
+
+The contents of this Documentation are subject to the Public Documentation License Version 1.0 (the “License”);
+you may only use this Documentation if you comply with the terms of this License.
+A copy of the License is available at https://firebirdsql.org/en/public-documentation-license/.
+
+The Original Documentation is "`jdp-2026-05: Experimental reimplementation of CallableStatement`".
+The Initial Writer of the Original Documentation is Mark Rotteveel, Copyright © 2024-2026.
+All Rights Reserved.
+(Initial Writer contact(s): mark (at) lawinegevaar (dot) nl).
+
+////
+Contributor(s): ______________________________________.
+Portions created by ______ are Copyright © _________ [Insert year(s)].
+All Rights Reserved.
+(Contributor contact(s): ________________ [Insert hyperlink/alias]).
+////
+
+The exact file history is recorded in our Git repository;
+see https://github.com/FirebirdSQL/jaybird
