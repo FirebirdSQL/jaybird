@@ -39,7 +39,12 @@ For known issues, consult <<known-issues>>.
 The following was fixed or changed since Jaybird 6.0.7:
 
 * Dependency update: updated `org.jspecify:jspecify` from 1.0.0 to 1.0.1 (issue:[964])
-* Fixed: GraalVM native image compilation issue (issue:[965])
+* Fixed: Graal native image compilation issue (issue:[965])
+* Improvement: added reachability metadata for GraalVM native image compilation (issue:[966])
++
+We only listed resources required by Jaybird, and did not extensively test for Graal compatibility.
+It's possible additional configuration or changes are needed.
+Pull requests or issues identifying further changes needed are always welcome.
 
 === Jaybird 6.0.7
 
