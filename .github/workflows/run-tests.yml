@@ -35,7 +35,7 @@ jobs:
           firebird_conf: 'WireCrypt=Enabled,AuthServer=Srp256;Srp;Legacy_Auth;Srp224;Srp384;Srp512,UserManager=Srp;Legacy_UserManager'
       - uses: actions/checkout@v7
       - name: Set up Java ${{ matrix.buildProfile }} (build) and ${{ matrix.testProfile }} (test)
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           java-version: |
             ${{ matrix.buildProfile }}
