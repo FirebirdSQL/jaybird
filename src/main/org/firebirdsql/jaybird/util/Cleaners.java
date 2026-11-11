@@ -13,7 +13,7 @@ import java.lang.ref.Cleaner;
 public final class Cleaners {
 
     private static final Cleaner jbCleaner = Cleaner.create();
-    private static final Cleaner.Cleanable NO_OP = () -> {};
+    private static final Cleaner.Cleanable NO_OP = new NoOp();
 
     private Cleaners() {
         // no instances
@@ -31,6 +31,16 @@ public final class Cleaners {
      */
     public static Cleaner.Cleanable getNoOp() {
         return NO_OP;
+    }
+
+    // NOTE: Using a named class instead of a lambda to avoid an issue when compiling to native with Graal
+    private static final class NoOp implements Cleaner.Cleanable {
+
+        @Override
+        public void clean() {
+            // does nothing
+        }
+
     }
 
 }
