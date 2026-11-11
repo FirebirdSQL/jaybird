@@ -1,0 +1,22 @@
+{
+  "resources": [
+    {
+      "bundle": "org.firebirdsql.jaybird.version"
+    },
+    {
+      "bundle": "org.firebirdsql.gds.ng.tz.firebird_time_zone_mapping"
+    },
+    {
+      "bundle": "jaybird_error_msg"
+    },
+    {
+      "bundle": "jaybird_error_sqlstates"
+    },
+    {
+      "glob": "org/firebirdsql/firebird_*_error_msg.properties"
+    },
+    {
+      "glob": "org/firebirdsql/firebird_*_sql_states.properties"
+    }
+  ]
+}

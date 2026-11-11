@@ -73,6 +73,12 @@ SPDX-FileCopyrightText = [ "https://github.com/tscanlin", "https://github.com/ow
 SPDX-License-Identifier = "MIT"
 
 [[annotations]]
+path = "src/resources/META-INF/native-image/org.firebirdsql.jdbc/jaybird/reachability-metadata.json"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "Copyright 2026 Mark Rotteveel"
+SPDX-License-Identifier = "LGPL-2.1-or-later"
+
+[[annotations]]
 path = "src/resources/META-INF/services/java.sql.Driver"
 precedence = "aggregate"
 SPDX-FileCopyrightText = "Copyright 2009 Roman Rokytskyy"
