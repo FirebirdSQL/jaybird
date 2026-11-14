@@ -24,7 +24,6 @@ public final class JaybirdSystemProperties {
     public static final String PROCESS_ID_PROP = JDBC_PREFIX + "pid";
     public static final String PROCESS_NAME_PROP = JDBC_PREFIX + "processName";
     public static final String DEFAULT_CONNECTION_ENCODING_PROPERTY = JDBC_PREFIX + "defaultConnectionEncoding";
-    public static final String REQUIRE_CONNECTION_ENCODING_PROPERTY = JDBC_PREFIX + "requireConnectionEncoding";
     public static final String DEFAULT_ENABLE_PROTOCOL = JDBC_PREFIX + "defaultEnableProtocol";
     public static final String DEFAULT_REPORT_SQL_WARNINGS = JDBC_PREFIX + "defaultReportSQLWarnings";
     public static final String DEFAULT_ASYNC_FETCH = JDBC_PREFIX + "defaultAsyncFetch";
@@ -58,10 +57,6 @@ public final class JaybirdSystemProperties {
 
     public static @Nullable String getDefaultConnectionEncoding() {
         return getSystemPropertyPrivileged(DEFAULT_CONNECTION_ENCODING_PROPERTY);
-    }
-
-    public static boolean isRequireConnectionEncoding() {
-        return getBooleanSystemPropertyPrivileged(REQUIRE_CONNECTION_ENCODING_PROPERTY);
     }
 
     public static boolean isNativeResourceShutdownDisabled() {

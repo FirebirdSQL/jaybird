@@ -692,7 +692,7 @@ This change was contributed by https://github.com/FuriousFourier[FuriousFourier^
 * Improvement: Add getters to `BackupManager` and allow "`use default`" to be set (issue:[948])
 * Improvement: Allow "`use default`" (`-1`) on `FBManager#setPageSize` (issue:[949])
 * Improvement: Add getters to `NBackupManager` (issue:[950])
-* ...
+* Support for system property `org.firebirdsql.jdbc.requireConnectionEncoding` was removed (issue:[959])
 
 [#compatibility-changes]
 == Compatibility changes

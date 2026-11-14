@@ -66,7 +66,6 @@ import static org.firebirdsql.gds.JaybirdSystemProperties.DEFAULT_CONNECTION_ENC
 import static org.firebirdsql.gds.JaybirdSystemProperties.JDBC_CONNECTION_FORCE_CLOSE_FATAL;
 import static org.firebirdsql.gds.JaybirdSystemProperties.PROCESS_ID_PROP;
 import static org.firebirdsql.gds.JaybirdSystemProperties.PROCESS_NAME_PROP;
-import static org.firebirdsql.gds.JaybirdSystemProperties.REQUIRE_CONNECTION_ENCODING_PROPERTY;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
 import static org.firebirdsql.jaybird.fb.constants.TpbItems.*;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -354,40 +353,21 @@ class FBConnectionTest {
 
     /**
      * Test if not explicitly specifying a connection character set does not result in an exception on the connection
-     * and sets encoding to NONE when system properties {@code org.firebirdsql.jdbc.defaultConnectionEncoding} and
-     * {@code org.firebirdsql.jdbc.requireConnectionEncoding} have not been set.
+     * and sets encoding to NONE when system property {@code org.firebirdsql.jdbc.defaultConnectionEncoding} has not
+     * been set.
      */
     @Test
     void testNoCharacterSetWithoutDefaultConnectionEncodingDefaultsToNONEIfEncodingNotRequired() throws Exception {
         Properties props = getDefaultPropertiesForConnection();
         props.remove("lc_ctype");
 
-        try (var ignored1 = withTemporarySystemProperty(REQUIRE_CONNECTION_ENCODING_PROPERTY, null);
-             var ignored2 = withTemporarySystemProperty(DEFAULT_CONNECTION_ENCODING_PROPERTY, null);
+        try (var ignored2 = withTemporarySystemProperty(DEFAULT_CONNECTION_ENCODING_PROPERTY, null);
              var connection = DriverManager.getConnection(getUrl(), props)) {
             // Previously, a warning was registered, verify that doesn't happen
             assertNull(connection.getWarnings(), "Expected no warning for not specifying connection character set");
             IConnectionProperties connectionProperties =
                     connection.unwrap(FirebirdConnection.class).getFbDatabase().getConnectionProperties();
             assertEquals("NONE", connectionProperties.getEncoding(), "Unexpected connection encoding");
-        }
-    }
-
-    /**
-     * Test if not explicitly specifying a connection character set results in an exception on the connection when
-     * system property {@code org.firebirdsql.jdbc.defaultConnectionEncoding} has not been set and
-     * {@code org.firebirdsql.jdbc.requireConnectionEncoding} has been set to {@code true}
-     */
-    @Test
-    void testNoCharacterSetExceptionWithoutDefaultConnectionEncodingAndEncodingRequired() {
-        Properties props = getDefaultPropertiesForConnection();
-        props.remove("lc_ctype");
-
-        try (var ignored1 = withTemporarySystemProperty(DEFAULT_CONNECTION_ENCODING_PROPERTY, null);
-             var ignored2 = withTemporarySystemProperty(REQUIRE_CONNECTION_ENCODING_PROPERTY, "true")){
-            var exception = assertThrowsForAutoCloseable(SQLNonTransientConnectionException.class,
-                    () -> DriverManager.getConnection(getUrl(), props));
-            assertThat(exception, fbMessageStartsWith(JaybirdErrorCodes.jb_noConnectionEncoding));
         }
     }
 

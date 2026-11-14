@@ -119,6 +119,10 @@ public interface JaybirdErrorCodes {
     int jb_unableToUnwrap           = 337248338;
     int jb_resultSetClosed          = 337248339;
     int jb_invalidConnectionEncoding                     = 337248340;
+    /**
+     * @deprecated Jaybird no longer uses this error code
+     */
+    @Deprecated(since = "7")
     int jb_noConnectionEncoding     = 337248341;
     int jb_clientInfoInvalidPropertyName                 = 337248342;
     int jb_clientInfoSystemContextReadOnly               = 337248343;

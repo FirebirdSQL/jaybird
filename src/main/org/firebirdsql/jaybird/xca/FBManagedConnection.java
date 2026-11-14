@@ -11,8 +11,8 @@
 */
 package org.firebirdsql.jaybird.xca;
 
+import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.JaybirdSystemProperties;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSHelper;
@@ -102,22 +102,7 @@ public final class FBManagedConnection implements ExceptionListener {
 
         //TODO: XIDs in limbo should be loaded so that XAER_DUPID can be thrown appropriately
 
-        IConnectionProperties connectionProperties = cri.asIConnectionProperties();
-
-        if (connectionProperties.getEncoding() == null && connectionProperties.getCharSet() == null) {
-            String defaultEncoding = getDefaultConnectionEncoding();
-            if (defaultEncoding == null) {
-                throw FbExceptionBuilder.toNonTransientConnectionException(JaybirdErrorCodes.jb_noConnectionEncoding);
-            }
-            connectionProperties.setEncoding(defaultEncoding);
-        }
-
-        if (connectionProperties.getConnectTimeout() == PropertyConstants.TIMEOUT_NOT_SET
-                && DriverManager.getLoginTimeout() > 0) {
-            connectionProperties.setConnectTimeout(DriverManager.getLoginTimeout());
-        }
-
-        database = mcf.getDatabaseFactory().connect(connectionProperties);
+        database = mcf.getDatabaseFactory().connect(getConnectionProperties(cri));
         database.addDatabaseListener(new MCDatabaseListener());
         database.addExceptionListener(this);
         if (createDb) {
@@ -127,6 +112,20 @@ public final class FBManagedConnection implements ExceptionListener {
         }
 
         gdsHelper = new GDSHelper(database);
+    }
+
+    private static IConnectionProperties getConnectionProperties(FBConnectionRequestInfo cri) {
+        IConnectionProperties connectionProperties = cri.asIConnectionProperties();
+
+        if (connectionProperties.getEncoding() == null && connectionProperties.getCharSet() == null) {
+            connectionProperties.setEncoding(getDefaultConnectionEncoding());
+        }
+
+        if (connectionProperties.getConnectTimeout() == PropertyConstants.TIMEOUT_NOT_SET
+                && DriverManager.getLoginTimeout() > 0) {
+            connectionProperties.setConnectTimeout(DriverManager.getLoginTimeout());
+        }
+        return connectionProperties;
     }
 
     @Override
@@ -1277,18 +1276,16 @@ public final class FBManagedConnection implements ExceptionListener {
         }
     }
 
-    private static @Nullable String getDefaultConnectionEncoding() {
+    private static String getDefaultConnectionEncoding() {
         try {
             String defaultConnectionEncoding = JaybirdSystemProperties.getDefaultConnectionEncoding();
             if (defaultConnectionEncoding != null) {
                 return defaultConnectionEncoding;
-            } else if (JaybirdSystemProperties.isRequireConnectionEncoding()) {
-                return null;
             }
         } catch (Exception e) {
-            log.log(ERROR, "Exception obtaining default connection encoding", e);
+            log.log(ERROR, "Exception obtaining default connection encoding; falling back to NONE", e);
         }
-        return "NONE";
+        return EncodingFactory.ENCODING_NAME_NONE;
     }
 
     /**
