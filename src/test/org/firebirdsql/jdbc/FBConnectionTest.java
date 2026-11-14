@@ -817,7 +817,7 @@ class FBConnectionTest {
     }
 
     /**
-     * Rationale: see <a href="http://tracker.firebirdsql.org/browse/JDBC-386">JDBC-386</a>
+     * Rationale: see <a href="https://github.com/FirebirdSQL/jaybird/issues/428">#428 (JDBC-386)</a>
      */
     @Test
     void transactionSettingsNotShared() throws Exception {

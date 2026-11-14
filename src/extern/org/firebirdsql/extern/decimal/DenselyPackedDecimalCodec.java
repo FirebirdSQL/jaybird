@@ -13,7 +13,7 @@ import java.util.Arrays;
  * encoded in 10 bits per group.
  * </p>
  * <p>
- * See: <a href="http://speleotrove.com/decimal/DPDecimal.html">A Summary of
+ * See: <a href="https://speleotrove.com/decimal/DPDecimal.html">A Summary of
  * Densely Packed Decimal encoding</a>
  * </p>
  * <p>

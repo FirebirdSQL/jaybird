@@ -83,7 +83,7 @@ publishing {
                 name = 'Jaybird Native GDS Factory Plugin'
                 packaging = 'jar'
                 description = 'Native GDS Factory Plugin for Jaybird JDBC Driver'
-                url = 'https://www.firebirdsql.org/en/devel-jdbc-driver/'
+                url = 'https://firebirdsql.org/en/devel-jdbc-driver/'
                 inceptionYear = '2001'
 
                 developers {

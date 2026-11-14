@@ -77,7 +77,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     public FirebirdParameterMetaData getFirebirdParameterMetaData() throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkValidity();
-            // TODO See http://tracker.firebirdsql.org/browse/JDBC-352
+            // TODO See https://github.com/FirebirdSQL/jaybird/issues/394
             notifyStatementStarted(false);
             prepareProcedureCall();
             return new FBParameterMetaData(fbStatement.getParameterDescriptor(), connection);
@@ -198,7 +198,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     public @Nullable ResultSetMetaData getMetaData() throws SQLException {
         checkValidity();
         try (LockCloseable ignored = withLock()) {
-            // TODO See http://tracker.firebirdsql.org/browse/JDBC-352
+            // TODO See https://github.com/FirebirdSQL/jaybird/issues/394
             notifyStatementStarted(false);
             prepareProcedureCall();
         }
@@ -1073,7 +1073,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * Returns the result set for the singleton row of the callable statement and asserts it has data. If this is a
      * selectable procedure, or there is no singleton row, it will return the normal result set.
      * <p>
-     * This should fix the problem described in <a href="http://tracker.firebirdsql.org/browse/JDBC-350">JDBC-350</a>
+     * This should fix the problem described in <a href="https://github.com/FirebirdSQL/jaybird/issues/167">#167 (JDBC-350)</a>
      * in most circumstances.
      * </p>
      *

@@ -376,7 +376,7 @@ class FBBlobTest {
     /**
      * Checks if the blob close on commit is done successfully.
      * <p>
-     * See <a href="http://tracker.firebirdsql.org/browse/JDBC-400">JDBC-400</a>.
+     * See <a href="https://github.com/FirebirdSQL/jaybird/issues/181">#181 (JDBC-400)</a>.
      * </p>
      */
     @Test
@@ -400,7 +400,7 @@ class FBBlobTest {
     /**
      * Checks if the blob close on rollback is done successfully.
      * <p>
-     * See <a href="http://tracker.firebirdsql.org/browse/JDBC-400">JDBC-400</a>.
+     * See <a href="https://github.com/FirebirdSQL/jaybird/issues/181">#181 (JDBC-400)</a>.
      * </p>
      */
     @Test
@@ -424,7 +424,7 @@ class FBBlobTest {
     /**
      * Checks if the blob close on close of the connection is done successfully in auto commit mode.
      * <p>
-     * See <a href="http://tracker.firebirdsql.org/browse/JDBC-348">JDBC-348</a>.
+     * See <a href="https://github.com/FirebirdSQL/jaybird/issues/391">#391 (JDBC-348)</a>.
      * </p>
      */
     @Test

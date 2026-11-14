@@ -321,7 +321,7 @@ public final class FBEscapedParser implements JdbcEscapeParser {
      * Convert the {@code "{limit <rows> [offset <rows_offset>]}"} call into the corresponding rows clause for Firebird.
      * <p>
      * NOTE: We assume that the {limit ...} escape occurs in the right place to work for a
-     * <a href="https://www.firebirdsql.org/file/documentation/chunk/en/refdocs/fblangref40/fblangref40-dml.html#fblangref40-dml-select-rows">{@code ROWS}</a>
+     * <a href="https://firebirdsql.org/file/documentation/chunk/en/refdocs/fblangref40/fblangref40-dml.html#fblangref40-dml-select-rows">{@code ROWS}</a>
      * clause in Firebird.
      * </p>
      * <p>

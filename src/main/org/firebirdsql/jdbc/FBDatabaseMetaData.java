@@ -1031,7 +1031,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     @Override
     public int getMaxIndexLength() throws SQLException {
         if (gdsHelper.compareToVersion(2) < 0) {
-            return 252; // See http://www.firebirdsql.org/en/firebird-technical-specifications/
+            return 252; // See https://firebirdsql.org/en/firebird-technical-specifications/
         } else {
             return 0; // 1/4 of page size, maybe retrieve page size and use that?
         }

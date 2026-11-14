@@ -454,7 +454,7 @@ class FBDriverTest {
     /**
      * Test Srp authentication with an account (DAVIDS) that produces a hash with leading zero.
      * <p>
-     * See <a href="http://tracker.firebirdsql.org/browse/JDBC-635">JDBC-635</a>.
+     * See <a href="https://github.com/FirebirdSQL/jaybird/issues/665">#665 (JDBC-635)</a>.
      * </p>
      */
     @Test

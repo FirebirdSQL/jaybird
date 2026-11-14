@@ -117,7 +117,7 @@ We admit this has a shaky legal foundation, but given this formalizes the curren
 
 Looking at the development history of Jaybird, originally between the https://github.com/FirebirdSQL/jaybird/commit/5e215213f916bc2c46d891da661131e18fb65f14[initial commit (2001-05-09)] and https://github.com/FirebirdSQL/jaybird/commit/70ccaee6[a commit in 2002-08-29], Jaybird was dual-licensed MPL 1.1 and LGPL.
 After that commit on 2002-08-09, Jaybird was only LGPL licensed.
-See also this discussion on Firebird-java, titled http://fb-list-archive.s3-website-eu-west-1.amazonaws.com/firebird-java/2002/8/1996.html[Change firebirdsql license to lgpl only? and, lets release next version.]
+See also this discussion on Firebird-java, titled https://fb-list-archive.lawinegevaar.nl/firebird-java/2002/8/1996.html[Change firebirdsql license to lgpl only? and, lets release next version.]
 
 On https://github.com/FirebirdSQL/jaybird/commit/a8040f98[2004-04-19], a change was committed by Roman Rokytskyy to the release notes, which said:
 

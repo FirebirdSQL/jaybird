@@ -213,7 +213,7 @@ class FBXAResourceTest {
     /**
      * Test that use of multiple statements in distributed transactions does not close result sets.
      * <p>
-     * See <a href="http://tracker.firebirdsql.org/browse/JDBC-344">JDBC-344</a>
+     * See <a href="https://github.com/FirebirdSQL/jaybird/issues/388">#388 (JDBC-344)</a>
      * </p>
      */
     @Test
@@ -253,7 +253,7 @@ class FBXAResourceTest {
     /**
      * Tests whether a connection obtained from a managed connection during a distributed transaction can be closed.
      * <p>
-     * See <a href="http://tracker.firebirdsql.org/browse/JDBC-362">JDBC-362</a>.
+     * See <a href="https://github.com/FirebirdSQL/jaybird/issues/404">#404 (JDBC-362)</a>.
      * </p>
      */
     @Test

@@ -152,7 +152,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
             if (metaDataQuery) {
                 fbStatement.clearCursorFlag(CursorFlag.CURSOR_TYPE_SCROLLABLE);
             }
-            // TODO See http://tracker.firebirdsql.org/browse/JDBC-352
+            // TODO See https://github.com/FirebirdSQL/jaybird/issues/394
             notifyStatementStarted();
             try {
                 prepareFixedStatement(sql);

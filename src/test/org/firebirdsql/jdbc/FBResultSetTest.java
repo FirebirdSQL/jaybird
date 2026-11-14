@@ -1385,7 +1385,7 @@ class FBResultSetTest {
     }
 
     /**
-     * Rationale: see <a href="http://tracker.firebirdsql.org/browse/JDBC-623">JDBC-623</a>.
+     * Rationale: see <a href="https://github.com/FirebirdSQL/jaybird/issues/653">#653 (JDBC-623)</a>.
      */
     @ParameterizedTest
     @MethodSource("scrollableCursorPropertyValues")

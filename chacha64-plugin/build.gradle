@@ -80,7 +80,7 @@ publishing {
                 name = 'ChaCha64 plugin for Jaybird'
                 packaging = 'jar'
                 description = 'ChaCha64 plugin for Jaybird JDBC Driver'
-                url = 'https://www.firebirdsql.org/en/devel-jdbc-driver/'
+                url = 'https://firebirdsql.org/en/devel-jdbc-driver/'
                 inceptionYear = '2023'
 
                 developers {

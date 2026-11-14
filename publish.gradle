@@ -14,7 +14,7 @@ publishing {
                 name = 'Jaybird JDBC Driver'
                 packaging = 'jar'
                 description = 'JDBC Driver for the Firebird RDBMS'
-                url = 'https://www.firebirdsql.org/en/devel-jdbc-driver/'
+                url = 'https://firebirdsql.org/en/devel-jdbc-driver/'
                 /*
                   Initial check-in was 2001-05-09 by "d_jencks" according to commit here:
                   https://github.com/FirebirdSQL/jaybird/commit/5e215213f916bc2c46d891da661131e18fb65f14

@@ -898,7 +898,7 @@ class FBCallableStatementTest {
      * Test if first accessing and processing the result set from an <b>executable</b> procedure,
      * and then accessing the getters works.
      * <p>
-     * See <a href="http://tracker.firebirdsql.org/browse/JDBC-350">JDBC-350</a>,
+     * See <a href="https://github.com/FirebirdSQL/jaybird/issues/167">#167 (JDBC-350)</a>,
      * </p>
      * <p>
      * NOTE: This tests behavior we maintain for compatibility with previous versions; a correct implementation
@@ -925,7 +925,7 @@ class FBCallableStatementTest {
     /**
      * Tests if the blob result of an executable procedure can be retrieved and is non-empty.
      * <p>
-     * See <a href="http://tracker.firebirdsql.org/browse/JDBC-381">JDBC-381</a>.
+     * See <a href="https://github.com/FirebirdSQL/jaybird/issues/423">#423 (JDBC-381)</a>.
      * </p>
      */
     @Test

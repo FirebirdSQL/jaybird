@@ -869,7 +869,7 @@ class FBPreparedStatementTest {
     /**
      * Tests multiple batch executions in a row when using blobs created from a stream
      * <p>
-     * See <a href="http://tracker.firebirdsql.org/browse/JDBC-312">JDBC-312</a>
+     * See <a href="https://github.com/FirebirdSQL/jaybird/issues/358">#358 (JDBC-312)</a>
      * </p>
      */
     @ParameterizedTest(name = "[{index}] useServerBatch = {0}")
@@ -915,7 +915,7 @@ class FBPreparedStatementTest {
     /**
      * Tests multiple batch executions in a row when using clobs created from a stream
      * <p>
-     * See <a href="http://tracker.firebirdsql.org/browse/JDBC-433">JDBC-433</a>
+     * See <a href="https://github.com/FirebirdSQL/jaybird/issues/474">#474 (JDBC-433)</a>
      * </p>
      */
     @ParameterizedTest(name = "[{index}] useServerBatch = {0}")
@@ -961,7 +961,7 @@ class FBPreparedStatementTest {
     /**
      * Tests multiple batch executions in a row when using clobs created from a String
      * <p>
-     * See <a href="http://tracker.firebirdsql.org/browse/JDBC-433">JDBC-433</a>
+     * See <a href="https://github.com/FirebirdSQL/jaybird/issues/474">#474 (JDBC-433)</a>
      * </p>
      */
     @ParameterizedTest(name = "[{index}] useServerBatch = {0}")
@@ -1239,7 +1239,7 @@ class FBPreparedStatementTest {
     /**
      * Tests if reexecuting a prepared statement after fetch failure works for holdable result set.
      * <p>
-     * See <a href="http://tracker.firebirdsql.org/browse/JDBC-531">JDBC-531</a>
+     * See <a href="https://github.com/FirebirdSQL/jaybird/issues/564">#564 (JDBC-531)</a>
      * </p>
      */
     @Test
