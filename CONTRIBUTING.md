@@ -39,6 +39,14 @@ Jaybird has a strict "No AI" policy. AI generated contributions will not be
 accepted due to the inherent copyright, licensing, and attribution issues of AI
 generated content.
 
+You are allowed to use AI to help you write bug reports or feature requests. If
+you do, please make sure it doesn't generate an overwhelming load of text
+without making clear at the start of the issue **what** the problem, bug, or
+request is. That is, provide a succinct description at the start of the issue.
+
+Main contributors reserve the right to close and ignore issues that in their
+opinion are too much AI with too little substance.
+
 License Notice
 ==============
 
