@@ -1,0 +1,83 @@
+= jdp-2026-07: Expose database info requests in JDBC implementation
+
+// SPDX-FileCopyrightText: Copyright 2026 Mark Rotteveel
+// SPDX-License-Identifier: LicenseRef-PDL-1.0
+
+== Status
+
+* Draft
+* Proposed for: Jaybird 7
+
+== Type
+
+* Feature-Specification
+
+== Context
+
+Firebird provides a mechanism to request database and connection information.
+In the wire protocol this is exposed through `op_info_database`, and in the legacy native API through `isc_database_info`.
+Jaybird uses this internally to request information on the database and connection, and for example in `FBTableStatisticsManager`.
+
+Sometimes Jaybird users want information beyond what Jaybird provides built-in, and which we consider not necessary to provide out-of-the-box in Jaybird itself.
+Currently, they can drop down to the low-level API, and use one of the `getDatabaseInfo` methods of `FbDatabase`.
+This requires them to parse the response byte array themselves.
+This is far from user-friendly.
+
+When parsing an information response, the right type must be used to parse a specific information item.
+Given new Firebird versions might introduce new information items and -- possibly(?) -- new types, it must be possible for users to specify types for unknown information items, or provide parsing themselves.
+
+Similar concerns also exists for statement information (`op_info_sql`/`isc_dsql_sql_info`), which is out of scope of this JDP;
+it might get addressed in a follow-up JDP.
+
+== Decision
+
+We will add a higher-level API for defining a database information request and parsing of the response.
+
+This API will be available and implemented at the GDS-ng level, but will be exposed on `org.firebirdsql.jdbc.FirebirdConnection` without the user having to access the `FbDatabase` instance.
+As such, actual package location of interfaces, classes, etc. should be considered carefully.
+For example, maybe packages `org.firebirdsql.jaybird.info` and/or `org.firebirdsql.jaybird.info.db`, exported from the module.
+
+The API will consist of:
+
+. A builder for the request
+. Adding of typed information items
+.. accepting known information items with a default type
+.. accepting unknown information items, defaulting to a String type
+.. allowing definition of unknown information items with a type
+.. allowing definition of known information items with a different type
+.. allowing definition of known and unknown information items with a custom parser
+. A built request can be executed repeatedly, as long as the `FbDatabase` instance is valid
+. Execution will output a `java.util.List` with tuples of information item and value (as supplied by the type or custom parser)
+
+Further transformation of the produced list is up to the user.
+
+Further details will be fleshed out during implementation and might change from what's initially specified here.
+As such, this JDP is in flux.
+
+Although out of scope, we will keep in mind that a similar solution is to be built for statement information requests.
+
+== Consequences
+
+*TODO* To be fleshed out during/after implementation
+
+[appendix]
+== License Notice
+
+The contents of this Documentation are subject to the Public Documentation License Version 1.0 (the “License”);
+you may only use this Documentation if you comply with the terms of this License.
+A copy of the License is available at https://firebirdsql.org/en/public-documentation-license/.
+
+The Original Documentation is "`jdp-2026-06: Service manager request customization`".
+The Initial Writer of the Original Documentation is Mark Rotteveel, Copyright © 2026.
+All Rights Reserved.
+(Initial Writer contact(s): mark (at) lawinegevaar (dot) nl).
+
+////
+Contributor(s): ______________________________________.
+Portions created by ______ are Copyright © _________ [Insert year(s)].
+All Rights Reserved.
+(Contributor contact(s): ________________ [Insert hyperlink/alias]).
+////
+
+The exact file history is recorded in our Git repository;
+see https://github.com/FirebirdSQL/jaybird
