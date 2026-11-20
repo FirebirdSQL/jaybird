@@ -26,6 +26,7 @@ import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.OdsVersion;
 import org.firebirdsql.jaybird.Version;
+import org.firebirdsql.jaybird.xca.FBManagedConnection;
 import org.firebirdsql.jdbc.InternalTransactionCoordinator.MetaDataTransactionCoordinator;
 import org.firebirdsql.jdbc.escape.FBEscapedFunctionHelper;
 import org.firebirdsql.jdbc.metadata.*;
@@ -110,13 +111,12 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     @Override
     public String getURL() throws SQLException {
-        // TODO Think of a less complex way to obtain the url or just return null?
-        GDSType gdsType = getGDSType();
-        return GDSFactory.getJdbcUrl(gdsType, gdsHelper.getConnectionProperties());
+        return GDSFactory.getJdbcUrl(getGDSType(), gdsHelper.getConnectionProperties());
     }
 
     private GDSType getGDSType() {
-        return connection.mc.getManagedConnectionFactory().getGDSType();
+        FBManagedConnection mc = connection.mc;
+        return mc != null ? mc.getManagedConnectionFactory().getGDSType() : null;
     }
 
     @Override
